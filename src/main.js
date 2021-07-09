@@ -8,12 +8,40 @@ let gameSettings = {
 }
 
 
+// class Player extends Phaser.GameObjects.Sprite {
+
+// }
+
+// class Enemy extends Phaser.GameObjects.Sprite {
+
+// }
+
+// class EnemyBullet extends Phaser.GameObjects.Image {
+
+// }
+
+class PlayerBullet extends Phaser.GameObjects.Image {
+    constructor() {
+
+    }
+
+    init() {
+
+    }
+    update() {
+
+    }
+
+}
+
+
 
 class Stage extends Phaser.Scene {
     constructor() {
         super("bulletStage");
     }
     init() {
+
 
     }
     preload() {
@@ -23,17 +51,73 @@ class Stage extends Phaser.Scene {
     }
     create() {
         this.enemies = this.add.group({
-            classType: Enemy,
+            defaultKey: 'enemy',
             maxSize: 100,
-            runChildUpdate: true
+            visible: false,
+            active: false
         });
+
+        this.spawnEnemy = (x, y) => {
+            if(undefined == x) {
+                x = Phaser.Math.Between(0, game.config.width);
+            }
+            if(undefined == y) {
+                y = Phaser.Math.Between(0, game.config.height);
+            }
+            console.log("Adding enemy", x, y);
+            let enemy = this.enemies.get(x, y);
+            enemy.setActive(true);
+            enemy.setVisible(true);
+
+        };
 
         this.time.addEvent({
-            delay: 100,
+            delay: 500,
             loop: true,
-            callback: this.addEnemy
-        });
+            callback: this.spawnEnemy
+        })
 
+//         this.enemies = this.add.group({
+//             defaultKey: 'enemy',
+//             classType: Enemy,
+//             maxSize: 100,
+//             runChildUpdate: true,
+//             createCallback: (enemy) => {enemy.setName('enemy' + this.getLength())},
+//             removeCallback: () => {}
+//         });
+//         console.log(this.enemies);
+
+//         const that = this;
+//         function addEnemy(x = undefined, y = undefined) {
+//             // Set the location: this should ultimately be handled
+//             // by the pattern generator.
+//             if(undefined == x) {
+//                 x = Phaser.Math.Between(0, game.config.width);
+//             }
+//             if(undefined == y) {
+//                 y = Phaser.Math.Between(0, game.config.height);
+//             }
+//             console.log("Adding enemy", x, y);
+
+//             if(that.enemies) {
+//                 const enemy = that.enemies.get(x, y);
+//                 enemy.setVisible(true);
+//                 enemy.setActive(true);
+//                 console.log(enemy);
+//                 if (enemy) {
+//                     enemy.begin(x, y);
+//                 }
+//             } else {
+//                 console.log(`this.enemies: ${that.enemies}`);
+//                 console.log(that);
+//             }
+//         }
+
+//         this.time.addEvent({
+//             delay: 1000,
+//             loop: true,
+//             callback: addEnemy
+//         });
 
 
     }
@@ -41,46 +125,7 @@ class Stage extends Phaser.Scene {
 
     }
 
-    addEnemy() {
-        // Set the location: this should ultimately be handled
-        // by the pattern generator.
-        const x = Phaser.Math.Between(0, game.config.width);
-        const y = Phaser.Math.Between(0, game.config.height);
 
-        if(this.enemies) {
-
-            const enemy = this.enemies.get();
-            if (enemy) {
-                enemy.fire(x, y);
-            }
-        }
-    }
-
-    // activateEnemy(enemy) {
-    //     enemy
-    //     .setActive(true)
-    //     .setVisible(true)
-    //     .setTint(Phaser.Display.Color.RandomRNG().color);
-    // }
-
-    // addEnemy() {
-    //     // Set the location: this should ultimately be handled
-    //     // by the pattern generator.
-    //     const x = Phaser.Math.Between(0, game.config.width);
-    //     const y = Phaser.Math.Between(0, game.config.height);
-    
-    //     const enemy = this.group.get(x, y);
-    //     if (!enemy) { return; } // at maximum enemies
-    //     this.activateEnemy(enemy);
-       
-    //     // for (const i of Array(game.config.enemyPoolSize).keys()) {
-    //     //     this.enemyPool.push({x: 40, y: 40, active: true});
-    //     // }
-    //     // for (const e of this.enemyPool) {
-    //     //     e.display = this.add.rectangle(e.x, e.y, 64, 64, gameSettings.enemyColor).setOrigin(0.5, 0.5);
-    //     //     e.displayHitbox = this.add.rectangle(e.x, e.y, 16, 16, gameSettings.enemyHitboxColor).setOrigin(0.5, 0.5);
-    //     // }
-    // }
     
 }
 
@@ -98,6 +143,7 @@ const config = {
         default: "arcade",
         arcade: {
             gravity: 0,
+            debug: true
         }
     },
     scene: [Stage],
