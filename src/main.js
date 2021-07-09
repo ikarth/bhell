@@ -57,6 +57,7 @@ class Stage extends Phaser.Scene {
     }
     preload() {
         this.load.image('enemy', 'assets/box.png');
+        this.load.image('player', 'assets/player.png');
         this.load.image('bullet', 'assets/bullet.png');
 
     }
@@ -72,7 +73,7 @@ class Stage extends Phaser.Scene {
 
         let playerX = game.config.width/2;
         let playerY = game.config.height - 32;
-        this.player = this.physics.add.sprite(playerX, playerY, 'enemy');
+        this.player = this.physics.add.sprite(playerX, playerY, 'player');
         //this.player.body.syncBounds = true;
         this.player.body.setSize(8,8);
         //this.player.body.setOffset(32, 32);
