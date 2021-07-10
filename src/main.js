@@ -2,12 +2,40 @@
 
 
 let bullet_behaviors = {
-    undefined: (bullet) => {
+    undefined: (scene, bullet) => {
         return [bullet.x, bullet.y];
     },
-    "rain": (bullet) => {
+    "rain": (scene, bullet) => {
         return [bullet.x, bullet.y + 2];
-    }
+    },
+    "spin-in-place": (scene, bullet, current_time) => {
+        const life_time = current_time - bullet.startTime;
+        const moveProgress = (life_time / 5000.0) % 1.0;
+        const currentAngle = bullet.spawnAngle + (360.0 * moveProgress) + (360.0 * bullet.spawnOffset);
+        const currentDistance = 0.01 * life_time;
+        let bulletLoc = bullet.spawnLocation.clone().add(scene.physics.velocityFromAngle(currentAngle, currentDistance));
+        return [bulletLoc.x, bulletLoc.y];
+    },
+    "spin-with-impetus": (scene, bullet, current_time) => {
+        const life_time = current_time - bullet.startTime;
+        const moveProgress = (life_time / bullet.spinRate) % 1.0;
+        const currentAngle = bullet.spawnAngle + (360.0 * moveProgress) + (360.0 * bullet.spawnOffset);
+        const currentDistance = bullet.bulletSpeed * life_time;
+        let initial_travel = bullet.spawnImpetus.clone().scale(life_time / 1000.0); // impetus is distance vector per one second
+        let bulletLoc = bullet.spawnLocation.clone().add(initial_travel);
+        bulletLoc.add(scene.physics.velocityFromAngle(currentAngle, currentDistance));
+        return [bulletLoc.x, bulletLoc.y];
+    },
+    // "spin-parent": (scene, bullet, current_time) => {
+    //     const life_time = current_time - bullet.startTime;
+    //     const moveProgress = (life_time / 2000.0) % 1.0;
+    //     const currentAngle = bullet.spawnAngle + (360.0 * moveProgress);
+    //     const currentDistance = 0.01 * life_time;
+    //     const parentLocation = new Phaser.Math.Vector2(bullet.parent.x, bullet.parent.y);
+    //     let bulletLoc = parentLocation.clone().add(scene.physics.velocityFromAngle(currentAngle, currentDistance));
+
+    //     return [bulletLoc.x, bulletLoc.y];
+    // }
 };
 
 
@@ -86,6 +114,7 @@ class Stage extends Phaser.Scene {
         this.player.body.setDrag(600, 800);
         this.player.body.setMass(200);
         this.player.setCollideWorldBounds(true);
+        this.player.setDepth(100);
 
         this.graphics = this.add.graphics({ fillStyle: { color: 0x00ff00 } });
         this.playerHitIndicator = new Phaser.Geom.Circle(playerX, playerY, 5);
@@ -98,7 +127,8 @@ class Stage extends Phaser.Scene {
             defaultKey: 'enemy',
             maxSize: 100,
             visible: false,
-            active: false
+            active: false,
+            runChildUpdate: true
         });
 
         this.spawnEnemy = (x, y) => {
@@ -108,32 +138,38 @@ class Stage extends Phaser.Scene {
             if(undefined == y) {
                 y = Phaser.Math.Between(0, game.config.height);
             }
-            console.log("Adding enemy", x, -y);
-            let enemy = this.enemies.get(x, -y);
+            console.log("Adding enemy", x, y);
+            let enemy = this.enemies.get(x, y);
             enemy.setActive(true);
             enemy.setVisible(true);
             enemy.lastAction = 0;
+            enemy.setVelocityY(10.0);
             //let color = Phaser.Display.Color();
             //enemy.setTint(color.random(50));
         };
 
         this.time.addEvent({
-            delay: 500,
+            delay: 5000,
             loop: true,
             callback: this.spawnEnemy
         })
 
+        // An object pool for the enemy bullets. 
         this.bullets = this.physics.add.group({
             defaultKey: 'bullet',
-            maxSize: 2000,
+            maxSize: config.gameplay.bulletPoolSize, // note that this uses config.gameplay and NOT game.config.gameplay
             visible: false,
-            active: false
+            active: false,
+            runChildUpdate: false
         });
+        // Populate the object pool so we don't have slowdowns when we need to create new bullets...
+        this.bullets.createMultiple({ quantity: config.gameplay.bulletPoolSize, active: false });
+ 
 
-
+        this.spawnEnemy();
     }
 
-    spawnBullet(x, y, pattern) {
+    spawnBullet(x, y, pattern, current_time, spawn_offset, initial_velocity, parent) {
         let bullet = this.bullets.get(x, y);
         if(bullet) {
             bullet.setActive(true);
@@ -144,7 +180,18 @@ class Stage extends Phaser.Scene {
             bullet.body.moves = false;
             bullet.body.onCollide = false;
             bullet._behavior = pattern;
-            bullet.startTime = this.sys.game.loop.time;
+            bullet.startTime = current_time;
+
+            bullet.spawnLocation = new Phaser.Math.Vector2(x,y);
+            bullet.spawnAngle = 180;
+            bullet.spawnOffset = spawn_offset;
+            bullet.spawnImpetus = initial_velocity;
+            
+            //bullet.parent = parent;
+
+            bullet.bulletSpeed = 0.01; // per second
+            bullet.spinRate = 15000.0; // in revolutions per second
+            
         }
     }
 
@@ -178,17 +225,22 @@ class Stage extends Phaser.Scene {
 
         let actionCooldown = 1000.0;
 
-        this.enemies.incY(1);
+        //this.enemies.incY(1);
         this.enemies.getChildren().forEach(element => {
             if(element.active) {
                 if(element.y > game.config.height) {
                    this.enemies.killAndHide(element);               
                 } else {
                     if (current_time > actionCooldown + element.lastAction) {
-                        this.spawnBullet(element.x, element.y, "rain");
+                        // Spawn One
+                        //this.spawnBullet(element.x, element.y, "spin-in-place", current_time, 0.0, element.body.velocity, element);
+                        // Spawn Many
+                        const spawn_count = 6;
+                        for(const i of Array(spawn_count).keys()) {
+                            this.spawnBullet(element.x, element.y, "spin-with-impetus", current_time, i / spawn_count, element.body.velocity.clone(), element);
+                        }
                         element.lastAction = current_time;
                     }
-                    
                 }
             }
         });
@@ -203,16 +255,15 @@ class Stage extends Phaser.Scene {
                 if(element.active && out_of_bounds) {
                     this.bullets.killAndHide(element);               
                 } else {
-                    let maxLife = 10000.0;
+                    let maxLife = 300000.0;
                     let lifespan = current_time - element.startTime;
-                    let bulletDelta = bullet_behaviors[element._behavior](element);
+                    let bulletDelta = bullet_behaviors[element._behavior](this, element, current_time);
                     element.x = bulletDelta[0];
                     element.y = bulletDelta[1];
                     if (lifespan > maxLife) {
                         this.bullets.killAndHide(element);               
                     }
-                }
-                
+                }                
             }
         })
 
@@ -241,10 +292,13 @@ const config = {
         default: "arcade",
         arcade: {
             gravity: 0,
-            debug: true
+            debug: false
         }
     },
-    scene: [Stage]
+    scene: [Stage],
+    gameplay: { // Phaser ignores this, but we can use it directly
+        bulletPoolSize: 20000
+    }
 }
 
 let game = new Phaser.Game(config);
