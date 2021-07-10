@@ -25,7 +25,7 @@ let bullet_behaviors = {
         let bulletLoc = bullet.spawnLocation.clone().add(initial_travel);
         bulletLoc.add(scene.physics.velocityFromAngle(currentAngle, currentDistance));
         return [bulletLoc.x, bulletLoc.y];
-    },
+    }
     // "spin-parent": (scene, bullet, current_time) => {
     //     const life_time = current_time - bullet.startTime;
     //     const moveProgress = (life_time / 2000.0) % 1.0;
@@ -191,6 +191,8 @@ class Stage extends Phaser.Scene {
 
             bullet.bulletSpeed = 0.01; // per second
             bullet.spinRate = 15000.0; // in revolutions per second
+
+            bullet.setDepth(10);
             
         }
     }
@@ -228,7 +230,7 @@ class Stage extends Phaser.Scene {
         //this.enemies.incY(1);
         this.enemies.getChildren().forEach(element => {
             if(element.active) {
-                if(element.y > game.config.height) {
+                if(element.y > game.config.height * 2) {
                    this.enemies.killAndHide(element);               
                 } else {
                     if (current_time > actionCooldown + element.lastAction) {
