@@ -169,7 +169,7 @@ class Stage extends Phaser.Scene {
         this.spawnEnemy();
     }
 
-    spawnBullet(x, y, pattern, current_time, spawn_offset, initial_velocity, parent) {
+    spawnBullet(x, y, pattern, current_time, spawn_offset, initial_velocity, settings={bulletSpeed: 0.01, spinRate: 15000.0}) {
         let bullet = this.bullets.get(x, y);
         if(bullet) {
             bullet.setActive(true);
@@ -189,8 +189,8 @@ class Stage extends Phaser.Scene {
             
             //bullet.parent = parent;
 
-            bullet.bulletSpeed = 0.01; // per second
-            bullet.spinRate = 15000.0; // in revolutions per second
+            bullet.bulletSpeed = settings.bulletSpeed; // per second
+            bullet.spinRate = settings.spinRate; // in revolutions per second
 
             bullet.setDepth(10);
             
@@ -225,7 +225,7 @@ class Stage extends Phaser.Scene {
             this.player.setVelocityY(0);
         }
 
-        let actionCooldown = 1000.0;
+        let actionCooldown = 2000.0;
 
         //this.enemies.incY(1);
         this.enemies.getChildren().forEach(element => {
@@ -235,11 +235,20 @@ class Stage extends Phaser.Scene {
                 } else {
                     if (current_time > actionCooldown + element.lastAction) {
                         // Spawn One
-                        //this.spawnBullet(element.x, element.y, "spin-in-place", current_time, 0.0, element.body.velocity, element);
+                        //this.spawnBullet(element.x, element.y, "spin-in-place", current_time, 0.0, element.body.velocity);
                         // Spawn Many
                         const spawn_count = 6;
                         for(const i of Array(spawn_count).keys()) {
-                            this.spawnBullet(element.x, element.y, "spin-with-impetus", current_time, i / spawn_count, element.body.velocity.clone(), element);
+                            this.spawnBullet(element.x, 
+                                             element.y, 
+                                             "spin-with-impetus", 
+                                             current_time, 
+                                             i / spawn_count, 
+                                             element.body.velocity.clone(), 
+                                             {
+                                                bulletSpeed: 0.02, 
+                                                spinRate: 17000.0
+                                            });
                         }
                         element.lastAction = current_time;
                     }
