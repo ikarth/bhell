@@ -138,12 +138,12 @@ class Stage extends Phaser.Scene {
             if(undefined == y) {
                 y = Phaser.Math.Between(0, game.config.height);
             }
-            console.log("Adding enemy", x, y);
-            let enemy = this.enemies.get(x, y);
+            console.log("Adding enemy", x, -y);
+            let enemy = this.enemies.get(x, -y);
             enemy.setActive(true);
             enemy.setVisible(true);
             enemy.lastAction = 0;
-            enemy.setVelocityY(10.0);
+            enemy.setVelocityY(40.0);
             //let color = Phaser.Display.Color();
             //enemy.setTint(color.random(50));
         };
