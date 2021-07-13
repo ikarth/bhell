@@ -102,7 +102,7 @@ class Stage extends Phaser.Scene {
         this.load.image('player', 'assets/player.png');
         this.load.image('bullet', 'assets/bullet.png');
         this.load.image('playerBullet', 'assets/bullet.png');
-
+        this.load.image('map_tileset', 'assets/tileset_legacy.png');
     }
 
     redraw() {
@@ -112,6 +112,20 @@ class Stage extends Phaser.Scene {
     }
 
     create() {
+        const level = [
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 17, 0, 0],
+            [0, 0, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 1],
+         ];
+
+        const map = this.make.tilemap({ data: level, tileWidth: 16, tileHeight: 16});
+        const tiles = map.addTilesetImage("map_tileset");
+        const layer = map.createStaticLayer(0, tiles, 0, 0);
+
+
         cursors = this.input.keyboard.createCursorKeys();
         triggerKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
