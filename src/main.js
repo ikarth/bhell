@@ -10,12 +10,22 @@ let bullet_behaviors = {
     "rain": (scene, bullet) => {
         return [bullet.x, bullet.y + 2];
     },
+    "outward": (scene, bullet, current_time) => {
+        const life_time = current_time - bullet.startTime;
+        const moveProgress = (life_time / 5000.0) % 1.0;
+        const currentAngle = bullet.spawnAngle + (360.0 * bullet.spawnOffset);
+        const currentDistance = 0.01 * life_time;
+        let bulletLoc = bullet.spawnLocation.clone().add(scene.physics.velocityFromAngle(currentAngle, currentDistance));
+        return [bulletLoc.x, bulletLoc.y];
+    },
     "spin-in-place": (scene, bullet, current_time) => {
         const life_time = current_time - bullet.startTime;
         const moveProgress = (life_time / 5000.0) % 1.0;
         const currentAngle = bullet.spawnAngle + (360.0 * moveProgress) + (360.0 * bullet.spawnOffset);
+        let initial_travel = bullet.spawnImpetus.clone().scale(life_time / 1000.0); // impetus is distance vector per one second
         const currentDistance = 0.01 * life_time;
-        let bulletLoc = bullet.spawnLocation.clone().add(scene.physics.velocityFromAngle(currentAngle, currentDistance));
+        let bulletLoc = bullet.spawnLocation.clone().add(initial_travel);
+        bulletLoc.add(scene.physics.velocityFromAngle(currentAngle, currentDistance));
         return [bulletLoc.x, bulletLoc.y];
     },
     "spin-with-impetus": (scene, bullet, current_time) => {
@@ -122,7 +132,7 @@ class Stage extends Phaser.Scene {
         this.player.setCollideWorldBounds(true);
         this.player.setDepth(100);
 
-        this.playerActionCooldown = 500;
+        this.playerActionCooldown = 100;
         this.playerLastActionTime = 0;
 
         this.graphics = this.add.graphics({ fillStyle: { color: 0x00ff00 } });
@@ -148,7 +158,7 @@ class Stage extends Phaser.Scene {
                 y = Phaser.Math.Between(0, game.config.height);
             }
             console.log("Adding enemy", x, -y);
-            let enemy = this.enemies.get(x, -y);
+            let enemy = this.enemies.get(x, y);
             enemy.setActive(true);
             enemy.setVisible(true);
             enemy.lastAction = 0;
@@ -158,7 +168,7 @@ class Stage extends Phaser.Scene {
         };
 
         this.time.addEvent({
-            delay: 5000,
+            delay: 15000,
             loop: true,
             callback: this.spawnEnemy
         })
