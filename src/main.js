@@ -1,9 +1,11 @@
 'use strict';
 
-
 let bullet_behaviors = {
     undefined: (scene, bullet) => {
         return [bullet.x, bullet.y];
+    },
+    "player": (scene, bullet) => {
+        return [bullet.x, bullet.y - bullet.bulletSpeed];
     },
     "rain": (scene, bullet) => {
         return [bullet.x, bullet.y + 2];
@@ -44,7 +46,9 @@ let gameSettings = {
     enemyHitboxColor: 0xee3333
 }
 
+// global variables for the keys...
 let cursors;
+let triggerKey;
 
 
 // class Player extends Phaser.GameObjects.Sprite {
@@ -87,6 +91,7 @@ class Stage extends Phaser.Scene {
         this.load.image('enemy', 'assets/box.png');
         this.load.image('player', 'assets/player.png');
         this.load.image('bullet', 'assets/bullet.png');
+        this.load.image('playerBullet', 'assets/bullet.png');
 
     }
 
@@ -98,6 +103,7 @@ class Stage extends Phaser.Scene {
 
     create() {
         cursors = this.input.keyboard.createCursorKeys();
+        triggerKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         let playerX = game.config.width/2;
         let playerY = game.config.height - 32;
@@ -115,6 +121,9 @@ class Stage extends Phaser.Scene {
         this.player.body.setMass(200);
         this.player.setCollideWorldBounds(true);
         this.player.setDepth(100);
+
+        this.playerActionCooldown = 500;
+        this.playerLastActionTime = 0;
 
         this.graphics = this.add.graphics({ fillStyle: { color: 0x00ff00 } });
         this.playerHitIndicator = new Phaser.Geom.Circle(playerX, playerY, 5);
@@ -164,9 +173,38 @@ class Stage extends Phaser.Scene {
         });
         // Populate the object pool so we don't have slowdowns when we need to create new bullets...
         this.bullets.createMultiple({ quantity: config.gameplay.bulletPoolSize, active: false });
+
+        this.playerBullets = this.physics.add.group({
+            defaultKey: 'playerBullet',
+            maxSize: config.gameplay.playerBulletPoolSize,
+            visible: false,
+            active: false,
+            runChildUpdate: false
+        });
+        // populate player bullet pool
+        this.playerBullets.createMultiple({quantity: config.gameplay.playerBulletPoolSize, active: false});
  
 
         this.spawnEnemy();
+    }
+
+    spawnPlayerBullet(x, y, pattern, current_time, settings={bulletSpeed: 1.01}) {
+        let bullet = this.playerBullets.get(x,y);
+        if(bullet) {
+            bullet.setActive(true);
+            bullet.setVisible(true);
+            bullet.body.immovable = true;
+            bullet.body.isCircle = true;
+            bullet.body.allowRotation = false;
+            bullet.body.moves = false;
+            bullet.body.onCollide = false;
+            bullet._behavior = pattern;
+            bullet.startTime = current_time;
+            bullet.spawnLocation = new Phaser.Math.Vector2(x,y);
+            bullet.bulletSpeed = settings.bulletSpeed; // per second
+            bullet.setDepth(20);
+            return bullet;
+        }
     }
 
     spawnBullet(x, y, pattern, current_time, spawn_offset, initial_velocity, settings={bulletSpeed: 0.01, spinRate: 15000.0}) {
@@ -193,13 +231,13 @@ class Stage extends Phaser.Scene {
             bullet.spinRate = settings.spinRate; // in revolutions per second
 
             bullet.setDepth(10);
-            
+            return bullet;
         }
     }
 
     update(current_time, delta_time) {
         
-        // player input
+        // player input - movement
         if (cursors.left.isDown) {
             this.player.setVelocityX(-20 * Math.max(this.inputTimeVert, this.maxInputImpulse));
             this.inputTimeVert += delta_time;
@@ -225,7 +263,39 @@ class Stage extends Phaser.Scene {
             this.player.setVelocityY(0);
         }
 
-        let actionCooldown = 2000.0;
+        // player input - shooting
+        if(triggerKey.isDown) {
+            if (current_time > this.playerActionCooldown + this.playerLastActionTime) {
+                this.spawnPlayerBullet(this.player.x, this.player.y, "player", current_time, {bulletSpeed: 10.0});
+                this.playerLastActionTime = current_time;
+            }
+        }
+
+        this.playerBulletMaxLife = 10000.0;
+        this.playerBullets.getChildren().forEach(element => {
+            if (element.active) {
+                let out_of_bounds = false;
+                out_of_bounds = element.y > (game.config.height * 2) ? true : out_of_bounds;
+                out_of_bounds = element.y < 0 - game.config.height ? true : out_of_bounds;
+                out_of_bounds = element.x < 0 - game.config.width ? true : out_of_bounds;
+                out_of_bounds = element.x > (game.config.width * 2) ? true : out_of_bounds;
+                if(element.active && out_of_bounds) {
+                    this.bullets.killAndHide(element);               
+                } else {
+                    let lifespan = current_time - element.startTime;
+                    if (lifespan > this.maxBulletLife) {
+                        this.bullets.killAndHide(element);               
+                    }
+                    let bulletDelta = bullet_behaviors[element._behavior](this, element, current_time);
+                    element.x = bulletDelta[0];
+                    element.y = bulletDelta[1];
+                }
+            }
+        });
+
+
+        // Later, I'm going to give the enemies more elaborate behaviors. But for right now, they just fire bullet patterns on a timer.
+        const actionCooldownLimit = 2000.0; 
 
         //this.enemies.incY(1);
         this.enemies.getChildren().forEach(element => {
@@ -233,7 +303,7 @@ class Stage extends Phaser.Scene {
                 if(element.y > game.config.height * 2) {
                    this.enemies.killAndHide(element);               
                 } else {
-                    if (current_time > actionCooldown + element.lastAction) {
+                    if (current_time > actionCooldownLimit + element.lastAction) {
                         // Spawn One
                         //this.spawnBullet(element.x, element.y, "spin-in-place", current_time, 0.0, element.body.velocity);
                         // Spawn Many
@@ -256,6 +326,8 @@ class Stage extends Phaser.Scene {
             }
         });
 
+        const maxBulletLife = 300000.0;
+
         this.bullets.getChildren().forEach((element) => {
             if (element.active) {
                 let out_of_bounds = false;
@@ -266,12 +338,11 @@ class Stage extends Phaser.Scene {
                 if(element.active && out_of_bounds) {
                     this.bullets.killAndHide(element);               
                 } else {
-                    let maxLife = 300000.0;
                     let lifespan = current_time - element.startTime;
                     let bulletDelta = bullet_behaviors[element._behavior](this, element, current_time);
                     element.x = bulletDelta[0];
                     element.y = bulletDelta[1];
-                    if (lifespan > maxLife) {
+                    if (lifespan > maxBulletLife) {
                         this.bullets.killAndHide(element);               
                     }
                 }                
@@ -279,14 +350,10 @@ class Stage extends Phaser.Scene {
         })
 
         // player graphics
-        this.playerHitIndicator.x = this.player.x + this.player.body.velocity.x;
-        this.playerHitIndicator.y = this.player.y + this.player.body.velocity.y;
-        this.redraw();
-
+        //this.playerHitIndicator.x = this.player.x + this.player.body.velocity.x;
+        //this.playerHitIndicator.y = this.player.y + this.player.body.velocity.y;
+        //this.redraw();
     }
-
-
-    
 }
 
 
@@ -308,7 +375,8 @@ const config = {
     },
     scene: [Stage],
     gameplay: { // Phaser ignores this, but we can use it directly
-        bulletPoolSize: 20000
+        bulletPoolSize: 20000,
+        playerBulletPoolSize: 200
     }
 }
 
