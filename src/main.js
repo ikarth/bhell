@@ -195,7 +195,7 @@ class Stage extends Phaser.Scene {
         this.playerBullets.createMultiple({quantity: config.gameplay.playerBulletPoolSize, active: false});
  
 
-        this.spawnEnemy();
+        //this.spawnEnemy();
     }
 
     spawnPlayerBullet(x, y, pattern, current_time, settings={bulletSpeed: 1.01}) {
