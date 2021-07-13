@@ -127,8 +127,7 @@ class Stage extends Phaser.Scene {
         this.obstacleLayer.scale = 2;
         this.obstacleLayer.setCollisionBetween(1, 999, true, "obstacles");
         //this.physics.world.enable(this.obstacleLayer);
-        console.log(this.obstacleLayer);
-        debugger;
+
 
         cursors = this.input.keyboard.createCursorKeys();
         triggerKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -277,8 +276,8 @@ class Stage extends Phaser.Scene {
         }        
         this.drawLayer.y = this.mapY;
         this.drawLayerTwo.y = this.mapTwoY;
-        this.obstacleLayer.y = this.mapY;
-        
+        //this.obstacleLayer.body.velocity.y = this.mapY;
+
         
         // player input - movement
         if (cursors.left.isDown) {
