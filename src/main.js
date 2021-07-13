@@ -124,9 +124,11 @@ class Stage extends Phaser.Scene {
         this.drawLayerTwo.scale = 3;
 
         this.obstacleLayer = this.map.createLayer("obstacles", this.tileset, this.mapX, this.mapY);
-        this.obstacleLayer.scale = 3;
-        this.obstacleLayer.setCollisionByExclusion([0], true, true);
-
+        this.obstacleLayer.scale = 2;
+        this.obstacleLayer.setCollisionBetween(1, 999, true, "obstacles");
+        //this.physics.world.enable(this.obstacleLayer);
+        console.log(this.obstacleLayer);
+        debugger;
 
         cursors = this.input.keyboard.createCursorKeys();
         triggerKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -137,6 +139,8 @@ class Stage extends Phaser.Scene {
         //this.player.body.syncBounds = true;
         this.player.body.setSize(8,8);
         //this.player.body.setOffset(32, 32);
+
+        this.physics.add.collider(this.player, this.obstacleLayer);
 
         this.inputTimeVert = 0.0;
         this.inputTimeHorz = 0.0;
@@ -273,6 +277,7 @@ class Stage extends Phaser.Scene {
         }        
         this.drawLayer.y = this.mapY;
         this.drawLayerTwo.y = this.mapTwoY;
+        this.obstacleLayer.y = this.mapY;
         
         
         // player input - movement
