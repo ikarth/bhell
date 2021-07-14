@@ -123,7 +123,7 @@ class Stage extends Phaser.Scene {
         this.drawLayer.scale = 3;
         this.drawLayerTwo.scale = 3;
 
-        this.obstacleLayer = this.map.createLayer("obstacles", this.tileset, this.mapX, this.mapY);
+        this.obstacleLayer = this.map.createDynamicLayer("obstacles", this.tileset, this.mapX, this.mapY);
         this.obstacleLayer.scale = 2;
         this.obstacleLayer.setCollisionBetween(1, 999, true, "obstacles");
         //this.physics.world.enable(this.obstacleLayer);
@@ -276,7 +276,7 @@ class Stage extends Phaser.Scene {
         }        
         this.drawLayer.y = this.mapY;
         this.drawLayerTwo.y = this.mapTwoY;
-        //this.obstacleLayer.body.velocity.y = this.mapY;
+        
 
         
         // player input - movement
