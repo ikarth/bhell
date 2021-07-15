@@ -219,12 +219,21 @@ class Stage extends Phaser.Scene {
         this.starEmitter = this.particleStarManager.createEmitter({
             x: game.config.width / 2,
             y: game.config.height / 2,
-            scale: { start: 0.01, end: 0.1 },
+            scale: { start: 0.01, end: 0.2, ease: Phaser.Math.Easing.Bounce.InOut },
+            angle: {min: 0, max: 0},
+            speed: { min: 100.0, max: 200.0},
+            tint: {min: 0xff0064, max: 0xff0000},
+            alpha: {min: 1.0, max: 0.0, ease: Phaser.Math.Easing.Bounce.InOut}, 
             blendMode: Phaser.BlendModes.SCREEN,
         });
     }
 
     update(current_time, delta_time) {
+
+
+        let emit_angle = (current_time * 0.1) % 360.0;
+        console.log(emit_angle);
+        this.starEmitter.setAngle(emit_angle);
 
 
         // Mildly broken background scrolling code
