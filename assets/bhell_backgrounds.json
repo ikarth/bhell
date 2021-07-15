@@ -70,8 +70,17 @@
  "tileheight":16,
  "tilesets":[
         {
+         "columns":48,
          "firstgid":1,
-         "source":"..\/..\/bhell_assets\/tiles\/Tilemap\/kenny.tsx"
+         "image":"..\/..\/bhell_assets\/tiles\/Tilesheet\/colored_packed.png",
+         "imageheight":352,
+         "imagewidth":768,
+         "margin":0,
+         "name":"kenny",
+         "spacing":0,
+         "tilecount":1056,
+         "tileheight":16,
+         "tilewidth":16
         }],
  "tilewidth":16,
  "type":"map",

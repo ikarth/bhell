@@ -102,8 +102,8 @@ class Stage extends Phaser.Scene {
         this.load.image('player', 'assets/player.png');
         this.load.image('bullet', 'assets/bullet.png');
         this.load.image('playerBullet', 'assets/bullet.png');
-        this.load.image('map_tileset', 'assets/tileset_legacy.png');
-        this.load.tilemapTiledJSON('bhell_map', 'assets/bhell_map2.json');
+        this.load.image('map_tileset', 'assets/colored_packed.png');
+        this.load.tilemapTiledJSON('bhell_map', 'assets/bhell_backgrounds.json');
     }
 
     redraw() {
@@ -115,19 +115,18 @@ class Stage extends Phaser.Scene {
     create() {
         this.mapX = 0;
         this.mapY = 0;
-        this.mapTwoY = this.mapY + (16 * 3 * 16)
+        this.mapOffset = 16 * 32 * 2; // tile size * map chunk height * scaling
         this.map = this.add.tilemap('bhell_map');
-        this.tileset = this.map.addTilesetImage('colored', 'map_tileset');
-        this.drawLayer = this.map.createLayer("Tile Layer 1", this.tileset, this.mapX, this.mapY);
-        this.drawLayerTwo = this.map.createLayer("Tile Layer 2", this.tileset, this.mapX, this.mapTwoY);
-        this.drawLayer.scale = 3;
-        this.drawLayerTwo.scale = 3;
-
-        this.obstacleLayer = this.map.createDynamicLayer("obstacles", this.tileset, this.mapX, this.mapY);
-        this.obstacleLayer.scale = 2;
-        this.obstacleLayer.setCollisionBetween(1, 999, true, "obstacles");
-        //this.physics.world.enable(this.obstacleLayer);
-
+        this.tileset = this.map.addTilesetImage('kenny', 'map_tileset', 16, 16, 0, 0);
+        this.landscapeLayers = [];
+        for(let i = 0; i < 5; i++) {
+            let drawLayer = this.map.createLayer(`landscape${i+1}`, this.tileset, this.mapX, this.mapY + (this.mapOffset * i));
+            drawLayer.scale = 2;
+            drawLayer.mapX = this.mapX;
+            drawLayer.mapY = this.mapY + (this.mapOffset * i);
+            drawLayer.offsetIndex = i;
+            this.landscapeLayers.push(drawLayer);
+        }
 
         cursors = this.input.keyboard.createCursorKeys();
         triggerKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -266,18 +265,14 @@ class Stage extends Phaser.Scene {
 
     update(current_time, delta_time) {
         this.mapY += 0.1 * delta_time;
-        this.mapTwoY += 0.1 * delta_time;
-        
-        if (this.mapY > game.config.height) {
-            this.mapY = -game.config.height;
-        }        
-        if (this.mapTwoY > game.config.height) {
-            this.mapTwoY = -game.config.height;
-        }        
-        this.drawLayer.y = this.mapY;
-        this.drawLayerTwo.y = this.mapTwoY;
-        
-
+        let mapScrollSpeed = 0.1;
+        this.landscapeLayers.forEach((layer) => {
+            layer.mapY += mapScrollSpeed * delta_time;
+            if (layer.mapY > game.config.height) {
+                layer.mapY = 0 - (this.mapOffset * (1 + layer.offsetIndex));
+            }
+            layer.y = layer.mapY;            
+        });
         
         // player input - movement
         if (cursors.left.isDown) {
@@ -404,7 +399,7 @@ const config = {
     width: 600,
     height: 800,
     pixelArt: true,
-    backgroundColor: 0x70a0e4,
+    backgroundColor: 0x472d3c,
     gameTitle: "BHell",
     gameUrl: null,
     gameVersion: "0.1",
