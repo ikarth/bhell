@@ -270,6 +270,8 @@ class Stage extends Phaser.Scene {
             layer.mapY += mapScrollSpeed * delta_time;
             if (layer.mapY > game.config.height) {
                 layer.mapY = 0 - (this.mapOffset * (1 + layer.offsetIndex));
+                layer.mapX = 0 - Phaser.Math.RND.integerInRange(0, 2) * 16;
+                layer.x = layer.mapX;
             }
             layer.y = layer.mapY;            
         });
