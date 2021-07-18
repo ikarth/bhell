@@ -114,6 +114,7 @@ class Stage extends Phaser.Scene {
     }
 
     create() {
+        
         this.mapX = 0;
         this.mapY = 0;
         this.mapOffset = 16 * 32 * 2; // tile size * map chunk height * scaling
@@ -226,13 +227,32 @@ class Stage extends Phaser.Scene {
             alpha: {min: 1.0, max: 0.0, ease: Phaser.Math.Easing.Bounce.InOut}, 
             blendMode: Phaser.BlendModes.SCREEN,
         });
+
+        this.gameOverText = this.add.text(
+            game.config.width/2, 
+            0-game.config.height/2, 
+            "Game\nOver", 
+            { fontFamily: "Papyrus, Comic Sans, serif",
+            textAlign: 'center',
+            fontSize: "64px"              
+        });
+
+        this.gameOverTween = this.tweens.add({
+            targets: this.gameOverText,
+            y: game.config.height/2,
+            duration: 2000,
+            repeat: -1,
+            hold: 1000,
+            ease: 'Bounce.easeOut'
+
+
+        });
     }
 
     update(current_time, delta_time) {
 
 
         let emit_angle = (current_time * 0.1) % 360.0;
-        console.log(emit_angle);
         this.starEmitter.setAngle(emit_angle);
 
 
@@ -432,7 +452,7 @@ const config = {
         default: "arcade",
         arcade: {
             gravity: 0,
-            debug: true
+            debug: false
         }
     },
     scene: [Stage],
@@ -443,4 +463,3 @@ const config = {
 }
 
 let game = new Phaser.Game(config);
-
