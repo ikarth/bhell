@@ -122,11 +122,14 @@ class Stage extends Phaser.Scene {
         for(let i = 0; i < 5; i++) {
             let drawLayer = this.map.createLayer(`landscape${i+1}`, this.tileset, this.mapX, this.mapY + (this.mapOffset * i));
             drawLayer.scale = 2;
+            drawLayer.setOrigin(0,0);
             drawLayer.mapX = this.mapX;
-            drawLayer.mapY = this.mapY + (this.mapOffset * i);
+            drawLayer.mapY = 0 - (this.mapOffset * i);
             drawLayer.offsetIndex = i;
+            drawLayer.activeScroll = false;
             this.landscapeLayers.push(drawLayer);
         }
+        //this.landscapeLayers[0].activeScroll = true;
 
         cursors = this.input.keyboard.createCursorKeys();
         triggerKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -263,9 +266,18 @@ class Stage extends Phaser.Scene {
         }
     }
 
+    activeBackgroundLayers() {
+        return this.landscapeLayers.reduce((accum, current) => {
+            if (current.activeScroll) {
+             return accum + 1;   
+            }
+            return accum;
+        }, 0);
+    }
+
     update(current_time, delta_time) {
         this.mapY += 0.1 * delta_time;
-        let mapScrollSpeed = 0.1;
+        let mapScrollSpeed = 5.0;
         this.landscapeLayers.forEach((layer) => {
             layer.mapY += mapScrollSpeed * delta_time;
             if (layer.mapY > this.landscapeLayers.length * 512) {
@@ -273,8 +285,42 @@ class Stage extends Phaser.Scene {
                 layer.mapX = 0 - Phaser.Math.RND.integerInRange(0, 2) * 16;
                 layer.x = layer.mapX;
             }
-            layer.y = layer.mapY;            
         });
+
+        let topOfActiveLayer = this.landscapeLayers.reduce((acc, cur) => {
+            if (cur.activeScroll) {
+                if (!isNaN(cur.layer.y)) {
+                    console.log(`current: ${cur.layer.y}`);
+                    if (acc > cur.layer.y) {
+                        acc = cur.layer.y;
+                    }
+                }
+            }
+            console.assert(!isNaN(acc));
+            return acc;
+        }, 0);
+        if(this.activeBackgroundLayers() > 2) {
+            debugger;
+        }
+
+        if (this.activeBackgroundLayers() < 2) {
+            // We're in danger of having a blank space in the background!
+            // Pick a background layer that isn't being used
+            let inactive_layers = this.landscapeLayers.filter(lay => lay.activeScroll == false);
+            if(inactive_layers.length > 0) {
+                let new_layer = Phaser.Math.RND.pick(inactive_layers);
+                new_layer.y = topOfActiveLayer - (new_layer.layer.heightInPixels + 512);
+                if(isNaN(new_layer.y)) {
+                    debugger;
+                }
+                new_layer.activeScroll = true;
+                new_layer.x = Phaser.Math.RND.integerInRange(0,512);
+                topOfActiveLayer = new_layer.y;
+            }
+        }
+
+        console.log(this.activeBackgroundLayers());
+
         
         // player input - movement
         if (cursors.left.isDown) {
