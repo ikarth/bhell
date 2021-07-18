@@ -286,44 +286,11 @@ class Stage extends Phaser.Scene {
                 layer.x = layer.mapX;
             }
             layer.y = layer.mapY;
+
+            // Could do it as an absolute position vs time if I worked out the math right...
             // layer.y = layer.mapY + (((0 + this.landscapeLayers.length) * 512) * ((current_time / 10000.0) % 1.0));
             // console.log(layer.y);
         });
-
-        // let topOfActiveLayer = this.landscapeLayers.reduce((acc, cur) => {
-        //     if (cur.activeScroll) {
-        //         if (!isNaN(cur.layer.y)) {
-        //             console.log(`current: ${cur.layer.y}`);
-        //             if (acc > cur.layer.y) {
-        //                 acc = cur.layer.y;
-        //             }
-        //         }
-        //     }
-        //     console.assert(!isNaN(acc));
-        //     return acc;
-        // }, 0);
-        // if(this.activeBackgroundLayers() > 2) {
-        //     debugger;
-        // }
-
-        // if (this.activeBackgroundLayers() < 2) {
-        //     // We're in danger of having a blank space in the background!
-        //     // Pick a background layer that isn't being used
-        //     let inactive_layers = this.landscapeLayers.filter(lay => lay.activeScroll == false);
-        //     if(inactive_layers.length > 0) {
-        //         let new_layer = Phaser.Math.RND.pick(inactive_layers);
-        //         new_layer.y = topOfActiveLayer - (new_layer.layer.heightInPixels + 512);
-        //         if(isNaN(new_layer.y)) {
-        //             debugger;
-        //         }
-        //         new_layer.activeScroll = true;
-        //         new_layer.x = Phaser.Math.RND.integerInRange(0,512);
-        //         topOfActiveLayer = new_layer.y;
-        //     }
-        // }
-
-        // console.log(this.activeBackgroundLayers());
-
         
         // player input - movement
         if (cursors.left.isDown) {
