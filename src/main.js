@@ -126,7 +126,7 @@ class Stage extends Phaser.Scene {
             drawLayer.mapX = this.mapX;
             drawLayer.mapY = 0 - (this.mapOffset * i);
             drawLayer.offsetIndex = i;
-            drawLayer.activeScroll = false;
+            drawLayer.activeScroll = true;
             this.landscapeLayers.push(drawLayer);
         }
         //this.landscapeLayers[0].activeScroll = true;
@@ -277,7 +277,7 @@ class Stage extends Phaser.Scene {
 
     update(current_time, delta_time) {
         this.mapY += 0.1 * delta_time;
-        let mapScrollSpeed = 5.0;
+        let mapScrollSpeed = 0.3;
         this.landscapeLayers.forEach((layer) => {
             layer.mapY += mapScrollSpeed * delta_time;
             if (layer.mapY > this.landscapeLayers.length * 512) {
@@ -285,41 +285,44 @@ class Stage extends Phaser.Scene {
                 layer.mapX = 0 - Phaser.Math.RND.integerInRange(0, 2) * 16;
                 layer.x = layer.mapX;
             }
+            layer.y = layer.mapY;
+            // layer.y = layer.mapY + (((0 + this.landscapeLayers.length) * 512) * ((current_time / 10000.0) % 1.0));
+            // console.log(layer.y);
         });
 
-        let topOfActiveLayer = this.landscapeLayers.reduce((acc, cur) => {
-            if (cur.activeScroll) {
-                if (!isNaN(cur.layer.y)) {
-                    console.log(`current: ${cur.layer.y}`);
-                    if (acc > cur.layer.y) {
-                        acc = cur.layer.y;
-                    }
-                }
-            }
-            console.assert(!isNaN(acc));
-            return acc;
-        }, 0);
-        if(this.activeBackgroundLayers() > 2) {
-            debugger;
-        }
+        // let topOfActiveLayer = this.landscapeLayers.reduce((acc, cur) => {
+        //     if (cur.activeScroll) {
+        //         if (!isNaN(cur.layer.y)) {
+        //             console.log(`current: ${cur.layer.y}`);
+        //             if (acc > cur.layer.y) {
+        //                 acc = cur.layer.y;
+        //             }
+        //         }
+        //     }
+        //     console.assert(!isNaN(acc));
+        //     return acc;
+        // }, 0);
+        // if(this.activeBackgroundLayers() > 2) {
+        //     debugger;
+        // }
 
-        if (this.activeBackgroundLayers() < 2) {
-            // We're in danger of having a blank space in the background!
-            // Pick a background layer that isn't being used
-            let inactive_layers = this.landscapeLayers.filter(lay => lay.activeScroll == false);
-            if(inactive_layers.length > 0) {
-                let new_layer = Phaser.Math.RND.pick(inactive_layers);
-                new_layer.y = topOfActiveLayer - (new_layer.layer.heightInPixels + 512);
-                if(isNaN(new_layer.y)) {
-                    debugger;
-                }
-                new_layer.activeScroll = true;
-                new_layer.x = Phaser.Math.RND.integerInRange(0,512);
-                topOfActiveLayer = new_layer.y;
-            }
-        }
+        // if (this.activeBackgroundLayers() < 2) {
+        //     // We're in danger of having a blank space in the background!
+        //     // Pick a background layer that isn't being used
+        //     let inactive_layers = this.landscapeLayers.filter(lay => lay.activeScroll == false);
+        //     if(inactive_layers.length > 0) {
+        //         let new_layer = Phaser.Math.RND.pick(inactive_layers);
+        //         new_layer.y = topOfActiveLayer - (new_layer.layer.heightInPixels + 512);
+        //         if(isNaN(new_layer.y)) {
+        //             debugger;
+        //         }
+        //         new_layer.activeScroll = true;
+        //         new_layer.x = Phaser.Math.RND.integerInRange(0,512);
+        //         topOfActiveLayer = new_layer.y;
+        //     }
+        // }
 
-        console.log(this.activeBackgroundLayers());
+        // console.log(this.activeBackgroundLayers());
 
         
         // player input - movement
