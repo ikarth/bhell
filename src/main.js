@@ -18,6 +18,15 @@ let bullet_behaviors = {
         let bulletLoc = bullet.spawnLocation.clone().add(scene.physics.velocityFromAngle(currentAngle, currentDistance));
         return [bulletLoc.x, bulletLoc.y];
     },
+    "outward-with-momentum": (scene, bullet, current_time) => {
+        const life_time = current_time - bullet.startTime;
+        const moveProgress = (life_time / 5000.0) % 1.0;
+        const currentAngle = bullet.spawnAngle + (360.0 * bullet.spawnOffset);
+        const currentDistance = 0.01 * life_time;
+        let initial_travel = bullet.spawnImpetus.clone().scale(life_time / 1000.0); // impetus is distance vector per one second
+        let bulletLoc = bullet.spawnLocation.clone().add(initial_travel).add(scene.physics.velocityFromAngle(currentAngle, currentDistance));
+        return [bulletLoc.x, bulletLoc.y];
+    },
     "spin-in-place": (scene, bullet, current_time) => {
         const life_time = current_time - bullet.startTime;
         const moveProgress = (life_time / 5000.0) % 1.0;
@@ -171,7 +180,7 @@ class Stage extends Phaser.Scene {
             runChildUpdate: true
         });
 
-        this.spawnEnemy = (x, y) => {
+        this.spawnEnemy = (x, y, settings = {bulletCount:6, bulletAngle:180, bulletAngleRotationRate: 10.0, bulletSpeed: 10.0, velocity: 40.0}) => {
             if(undefined == x) {
                 x = Phaser.Math.Between(0, game.config.width);
             }
@@ -183,9 +192,15 @@ class Stage extends Phaser.Scene {
             enemy.setActive(true);
             enemy.setVisible(true);
             enemy.lastAction = 0;
-            enemy.setVelocityY(40.0);
+            enemy.setVelocityY(settings.velocity);
+            enemy.bullets = {};
+            enemy.bullets.speed = settings.bulletSpeed;
+            enemy.bullets.spawnCount = settings.bulletCount;
+            enemy.bullets.angle = settings.bulletAngle;
+            enemy.bullets.spawnRotation = settings.bulletAngleRotationRate;
             //let color = Phaser.Display.Color();
             //enemy.setTint(color.random(50));
+            return enemy;
         };
 
         this.time.addEvent({
@@ -216,7 +231,7 @@ class Stage extends Phaser.Scene {
         this.playerBullets.createMultiple({quantity: config.gameplay.playerBulletPoolSize, active: false});
  
 
-        //this.spawnEnemy();
+        this.spawnEnemy();
     }
 
     spawnPlayerBullet(x, y, pattern, current_time, settings={bulletSpeed: 1.01}) {
@@ -238,7 +253,7 @@ class Stage extends Phaser.Scene {
         }
     }
 
-    spawnBullet(x, y, pattern, current_time, spawn_offset, initial_velocity, settings={bulletSpeed: 0.01, spinRate: 15000.0}) {
+    spawnBullet(x, y, pattern, current_time, spawn_offset, initial_velocity, settings={bulletSpeed: 0.01, spinRate: 15000.0, spawnAngleRotationRate: 0.0}) {
         let bullet = this.bullets.get(x, y);
         if(bullet) {
             bullet.setActive(true);
@@ -253,6 +268,15 @@ class Stage extends Phaser.Scene {
 
             bullet.spawnLocation = new Phaser.Math.Vector2(x,y);
             bullet.spawnAngle = 180;
+            if (settings.spawnAngle) {
+                bullet.spawnAngle = settings.spawnAngle;
+            }
+            if (settings.spawnAngleRotationRate) {
+                if (Math.abs(settings.spawnAngleRotationRate) > 0.0001) {
+                    bullet.spawnAngle = settings.spawnAngle + (360.0 * (current_time % settings.spawnAngleRotationRate));
+                }                
+            }
+            bullet.spawnAngle %= 360.0;
             bullet.spawnOffset = spawn_offset;
             bullet.spawnImpetus = initial_velocity;
             
@@ -350,7 +374,7 @@ class Stage extends Phaser.Scene {
 
 
         // Later, I'm going to give the enemies more elaborate behaviors. But for right now, they just fire bullet patterns on a timer.
-        const actionCooldownLimit = 2000.0; 
+        const actionCooldownLimit = 600.0; 
 
         //this.enemies.incY(1);
         this.enemies.getChildren().forEach(element => {
@@ -362,17 +386,19 @@ class Stage extends Phaser.Scene {
                         // Spawn One
                         //this.spawnBullet(element.x, element.y, "spin-in-place", current_time, 0.0, element.body.velocity);
                         // Spawn Many
-                        const spawn_count = 6;
+                        const spawn_count = element.bullets.spawnCount;
                         for(const i of Array(spawn_count).keys()) {
                             this.spawnBullet(element.x, 
                                              element.y, 
-                                             "spin-with-impetus", 
+                                             "outward-with-momentum", 
                                              current_time, 
-                                             i / spawn_count, 
+                                             (i / spawn_count), 
                                              element.body.velocity.clone(), 
                                              {
-                                                bulletSpeed: 0.02, 
-                                                spinRate: 17000.0
+                                                bulletSpeed: element.bullets.bulletSpeed, 
+                                                spinRate: 17000.0,
+                                                spawnAngle: element.bullets.angle,
+                                                spawnAngleRotationRate: element.bullets.spawnRotation
                                             });
                         }
                         element.lastAction = current_time;
