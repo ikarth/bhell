@@ -3,7 +3,7 @@
 const defaultEnemySettings = {
     texture: 'enemy', 
     movement: 'normal', 
-    speed: 400, 
+    speed: 200.0, 
     lifespan: null,
     bullets: {
         count: 6,
@@ -26,7 +26,11 @@ class Enemy extends Phaser.GameObjects.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
+        this.configure(enemySettings);
+    }
+    configure(enemySettings) {
         this.beginTime = null;
+        this.lifespan = enemySettings.lifespan;
 
         this.setTexture(enemySettings.texture);
         this.movementType = enemySettings.movement;
@@ -34,6 +38,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
         // Normal movement - just go forward
         this.body.setVelocityY(enemySettings.speed);
+        this.enemySpeed = enemySettings.speed;
 
         this.lastAction = 0;
         this.cooldown = 1000.0
@@ -57,20 +62,26 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.setActive(true);
         this.setVisible(true);
         this.beginTime = null;
+        this.lastAction = 0;
+
+        this.configure(enemySettings);
+        
+        this.body.setVelocityY(this.enemySpeed);
+        console.log("Spawned Enemy");
     }
     despawn() {
         this.setActive(false);
         this.setVisible(false);
         this.beginTime = null;
     }
-    update(current_time) {
-        if(!beginTime) {
+    update(current_time, delta_time) {
+        if(!this.beginTime) {
             this.beginTime = current_time;
         }
-        if (element.y > game.config.height * 2) {
+        if (this.y > game.config.height * 2) {
             this.despawn();
         }
-        if(lifespan) {
+        if(this.lifespan) {
             if(current_time > lifespan + this.beginTime) {
                 this.despawn();
             }

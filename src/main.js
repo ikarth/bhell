@@ -208,7 +208,7 @@ class Stage extends Phaser.Scene {
         // };
 
         this.time.addEvent({
-            delay: 15000,
+            delay: 5000,
             loop: true,
             callback: this.spawnEnemy
         })
@@ -374,6 +374,12 @@ class Stage extends Phaser.Scene {
                     element.y = bulletDelta[1];
                 }
             }
+        });
+
+
+        // Group objects need to be updated manually (see https://github.com/photonstorm/phaser/issues/3378)
+        this.enemies.getChildren().forEach(element => {
+            element.update(current_time, delta_time);
         });
 
 
