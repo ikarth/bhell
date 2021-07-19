@@ -165,43 +165,47 @@ class Stage extends Phaser.Scene {
         this.playerActionCooldown = 100;
         this.playerLastActionTime = 0;
 
-        this.graphics = this.add.graphics({ fillStyle: { color: 0x00ff00 } });
-        this.playerHitIndicator = new Phaser.Geom.Circle(playerX, playerY, 5);
-
-        
-        this.redraw();
+        //this.graphics = this.add.graphics({ fillStyle: { color: 0x00ff00 } });
+        //this.playerHitIndicator = new Phaser.Geom.Circle(playerX, playerY, 5);
+        //this.redraw();
 
 
         this.enemies = this.physics.add.group({
-            defaultKey: 'enemy',
+            classType: Enemy,
             maxSize: 100,
             visible: false,
             active: false,
             runChildUpdate: true
         });
 
-        this.spawnEnemy = (x, y, settings = {bulletCount:6, bulletAngle:180, bulletAngleRotationRate: 10.0, bulletSpeed: 10.0, velocity: 40.0}) => {
-            if(undefined == x) {
-                x = Phaser.Math.Between(0, game.config.width);
-            }
-            if(undefined == y) {
-                y = Phaser.Math.Between(0, game.config.height);
-            }
-            console.log("Adding enemy", x, -y);
-            let enemy = this.enemies.get(x, y);
-            enemy.setActive(true);
-            enemy.setVisible(true);
-            enemy.lastAction = 0;
-            enemy.setVelocityY(settings.velocity);
-            enemy.bullets = {};
-            enemy.bullets.speed = settings.bulletSpeed;
-            enemy.bullets.spawnCount = settings.bulletCount;
-            enemy.bullets.angle = settings.bulletAngle;
-            enemy.bullets.spawnRotation = settings.bulletAngleRotationRate;
-            //let color = Phaser.Display.Color();
-            //enemy.setTint(color.random(50));
-            return enemy;
-        };
+        this.spawnEnemy = () => {
+            let enemy = this.enemies.get();
+            enemy.spawn();
+            console.log(enemy);
+        }
+
+        // this.spawnEnemy = (x, y, settings = {bulletCount:6, bulletAngle:180, bulletAngleRotationRate: 10.0, bulletSpeed: 10.0, velocity: 40.0}) => {
+        //     if(undefined == x) {
+        //         x = Phaser.Math.Between(0, game.config.width);
+        //     }
+        //     if(undefined == y) {
+        //         y = Phaser.Math.Between(0, game.config.height);
+        //     }
+        //     console.log("Adding enemy", x, -y);
+        //     let enemy = this.enemies.get(x, y);
+        //     enemy.setActive(true);
+        //     enemy.setVisible(true);
+        //     enemy.lastAction = 0;
+        //     enemy.setVelocityY(settings.velocity);
+        //     enemy.bullets = {};
+        //     enemy.bullets.speed = settings.bulletSpeed;
+        //     enemy.bullets.spawnCount = settings.bulletCount;
+        //     enemy.bullets.angle = settings.bulletAngle;
+        //     enemy.bullets.spawnRotation = settings.bulletAngleRotationRate;
+        //     //let color = Phaser.Display.Color();
+        //     //enemy.setTint(color.random(50));
+        //     return enemy;
+        // };
 
         this.time.addEvent({
             delay: 15000,
@@ -372,40 +376,6 @@ class Stage extends Phaser.Scene {
             }
         });
 
-
-        // Later, I'm going to give the enemies more elaborate behaviors. But for right now, they just fire bullet patterns on a timer.
-        const actionCooldownLimit = 2000.0; 
-
-        //this.enemies.incY(1);
-        this.enemies.getChildren().forEach(element => {
-            if(element.active) {
-                if(element.y > game.config.height * 2) {
-                   this.enemies.killAndHide(element);               
-                } else {
-                    if (current_time > actionCooldownLimit + element.lastAction) {
-                        // Spawn One
-                        //this.spawnBullet(element.x, element.y, "spin-in-place", current_time, 0.0, element.body.velocity);
-                        // Spawn Many
-                        const spawn_count = element.bullets.spawnCount;
-                        for(const i of Array(spawn_count).keys()) {
-                            this.spawnBullet(element.x, 
-                                             element.y, 
-                                             "outward-with-momentum", 
-                                             current_time, 
-                                             (i / spawn_count), 
-                                             element.body.velocity.clone(), 
-                                             {
-                                                bulletSpeed: element.bullets.bulletSpeed, 
-                                                spinRate: 17000.0,
-                                                spawnAngle: element.bullets.angle,
-                                                spawnAngleRotationRate: element.bullets.spawnRotation
-                                            });
-                        }
-                        element.lastAction = current_time;
-                    }
-                }
-            }
-        });
 
         const maxBulletLife = 300000.0;
 
