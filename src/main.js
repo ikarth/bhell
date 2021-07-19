@@ -374,7 +374,7 @@ class Stage extends Phaser.Scene {
 
 
         // Later, I'm going to give the enemies more elaborate behaviors. But for right now, they just fire bullet patterns on a timer.
-        const actionCooldownLimit = 600.0; 
+        const actionCooldownLimit = 2000.0; 
 
         //this.enemies.incY(1);
         this.enemies.getChildren().forEach(element => {
