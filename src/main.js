@@ -67,6 +67,8 @@ class Stage extends Phaser.Scene {
         this.load.image('playerBullet', 'assets/bullet.png');
         this.load.image('map_tileset', 'assets/colored_packed.png');
         this.load.tilemapTiledJSON('bhell_map', 'assets/bhell_backgrounds.json');
+
+        this.load.spritesheet('player_character', 'assets/playercharacteranimated.png', {frameWidth: 16, frameHeight: 16})
     }
 
     redraw() {
@@ -99,10 +101,19 @@ class Stage extends Phaser.Scene {
 
         let playerX = game.config.width/2;
         let playerY = game.config.height - 32;
-        this.player = this.physics.add.sprite(playerX, playerY, 'player');
+        this.player = this.physics.add.sprite(playerX, playerY, 'player_character');
+        this.player.setOrigin(0.5, 0.5);
+        this.player.scale = 2;
+        this.anims.create({
+            key: 'walk',
+            frames: this.anims.generateFrameNumbers('player_character', {frames: [0, 1, 2, 3]}),
+            frameRate: 6,
+            repeat: -1
+        });
+        this.player.play('walk');
         //this.player.body.syncBounds = true;
-        this.player.body.setSize(8,8);
-        //this.player.body.setOffset(32, 32);
+        this.player.body.setSize(3,3);
+        this.player.body.setOffset(7, 9);
 
         this.physics.add.collider(this.player, this.obstacleLayer);
 
@@ -222,8 +233,8 @@ class Stage extends Phaser.Scene {
     }
 
     update(current_time, delta_time) {
-        this.mapY += 0.1 * delta_time;
-        let mapScrollSpeed = 0.3;
+        //this.mapY += 0.1 * delta_time;
+        let mapScrollSpeed = 0.1;
         this.landscapeLayers.forEach((layer) => {
             layer.mapY += mapScrollSpeed * delta_time;
             if (layer.mapY > this.landscapeLayers.length * 512) {
