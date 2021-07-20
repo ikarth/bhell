@@ -8,7 +8,7 @@ let moveBullet = (scene, bullet, current_time) => {
     let amount_to_spin = Phaser.Math.DegToRad(spin_cycle);
     let spin_angle = new Phaser.Math.Vector2(0.0, 1.0).rotate(amount_to_spin);
     let firing_vector = spin_angle.rotate(firing_angle).scale(bullet_distance);
-    let inherited_velocity = bullet.spawnVelocity.clone().scale(life_time);
+    let inherited_velocity = bullet.spawnVelocity.clone().scale(life_time).scale(bullet.inheritParentVelocity);
     firing_vector.add(inherited_velocity);
     let new_position = new Phaser.Math.Vector2(bullet.spawnX, bullet.spawnY).add(firing_vector);
     return [new_position.x, new_position.y];
@@ -22,35 +22,7 @@ let gameSettings = {
 // global variables for the keys...
 let cursors;
 let triggerKey;
-
-
-// class Player extends Phaser.GameObjects.Sprite {
-
-// }
-
-// class Enemy extends Phaser.GameObjects.Sprite {
-
-// }
-
-// class EnemyBullet extends Phaser.GameObjects.Image {
-
-// }
-
-class PlayerBullet extends Phaser.GameObjects.Image {
-    constructor() {
-
-    }
-
-    init() {
-
-    }
-    update() {
-
-    }
-
-}
-
-
+let preciseKey;
 
 class Stage extends Phaser.Scene {
     constructor() {
@@ -64,7 +36,7 @@ class Stage extends Phaser.Scene {
         this.load.image('enemy', 'assets/box.png');
         this.load.image('player', 'assets/player.png');
         this.load.image('bullet', 'assets/bullet.png');
-        this.load.image('playerBullet', 'assets/bullet.png');
+        this.load.image('playerBullet', 'assets/star_02.png');
         this.load.image('map_tileset', 'assets/colored_packed.png');
         this.load.tilemapTiledJSON('bhell_map', 'assets/bhell_backgrounds.json');
 
@@ -98,6 +70,7 @@ class Stage extends Phaser.Scene {
 
         cursors = this.input.keyboard.createCursorKeys();
         triggerKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        preciseKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
         let playerX = game.config.width/2;
         let playerY = game.config.height - 32;
@@ -125,9 +98,9 @@ class Stage extends Phaser.Scene {
         this.player.body.setDrag(600, 800);
         this.player.body.setMass(200);
         this.player.setCollideWorldBounds(true);
-        this.player.setDepth(100);
+        this.player.setDepth(500);
 
-        this.playerActionCooldown = 100;
+        this.playerActionCooldown = 200;
         this.playerLastActionTime = 0;
 
         //this.graphics = this.add.graphics({ fillStyle: { color: 0x00ff00 } });
@@ -204,21 +177,39 @@ class Stage extends Phaser.Scene {
         }
     }
 
-    spawnPlayerBullet(x, y, pattern, current_time, settings={bulletSpeed: 1.01}) {
+    spawnPlayerBullet(x, y, pattern, current_time, settings={bulletSpeed: 0.01}) {
         let bullet = this.playerBullets.get(x,y);
         if(bullet) {
+            bullet.launching = true;
             bullet.setActive(true);
             bullet.setVisible(true);
             bullet.body.immovable = true;
-            bullet.body.isCircle = true;
             bullet.body.allowRotation = false;
             bullet.body.moves = false;
             bullet.body.onCollide = false;
+            bullet.setOrigin(0.5, 0.5);
+            bullet.body.setSize(12, 12);
+            bullet.body.setOffset(26, 20);
+            bullet.body.isCircle = true;
+            //
             bullet._behavior = pattern;
-            bullet.startTime = current_time;
+            bullet.spawnTime = current_time;
             bullet.spawnLocation = new Phaser.Math.Vector2(x,y);
             bullet.bulletSpeed = settings.bulletSpeed; // per second
             bullet.setDepth(200);
+
+            // Bullet movement Properties
+            bullet.spawnSpeed = settings.bulletSpeed;
+            bullet.spawnAngle = 180;
+            bullet.bulletSpin = 0;
+            bullet.spawnVelocity = this.player.body.velocity.clone();
+            bullet.inheritParentVelocity = 0.0;
+            bullet.spawnX = this.player.body.x + 2; // offset to spawn from visually correct spot 
+            bullet.spawnY = this.player.body.y - 4;
+
+            
+            bullet.blendMode = Phaser.BlendModes.ADD;
+
             return bullet;
         }
     }
@@ -233,7 +224,7 @@ class Stage extends Phaser.Scene {
     }
 
     update(current_time, delta_time) {
-        //this.mapY += 0.1 * delta_time;
+        const that = this;
         let mapScrollSpeed = 0.1;
         this.landscapeLayers.forEach((layer) => {
             layer.mapY += mapScrollSpeed * delta_time;
@@ -250,20 +241,29 @@ class Stage extends Phaser.Scene {
         });
         
         // player input - movement
+        let player_speed_input = 20.0;
+        let precise_mode = false;
+        this.player.body.setMaxSpeed(320);
+        if (preciseKey.isDown) {
+            player_speed_input = 1.0;
+            precise_mode = true;
+            this.player.body.setMaxSpeed(180);
+        }
+
         if (cursors.left.isDown) {
-            this.player.setVelocityX(-20 * Math.max(this.inputTimeVert, this.maxInputImpulse));
+            this.player.setVelocityX(-player_speed_input * Math.max(this.inputTimeVert, this.maxInputImpulse));
             this.inputTimeVert += delta_time;
         } else if (cursors.right.isDown) {
-            this.player.setVelocityX(20 * Math.max(this.inputTimeVert, this.maxInputImpulse));
+            this.player.setVelocityX(player_speed_input * Math.max(this.inputTimeVert, this.maxInputImpulse));
             this.inputTimeVert += delta_time;
         } else {
             this.inputTimeVert -= delta_time * 4.0;
         }
         if (cursors.up.isDown) {
-            this.player.setVelocityY(-20 * Math.max(this.inputTimeHorz, this.maxInputImpulse));
+            this.player.setVelocityY(-player_speed_input * Math.max(this.inputTimeHorz, this.maxInputImpulse));
             this.inputTimeHorz += delta_time;
         } else if (cursors.down.isDown) {
-            this.player.setVelocityY(20 * Math.max(this.inputTimeHorz, this.maxInputImpulse));
+            this.player.setVelocityY(player_speed_input * Math.max(this.inputTimeHorz, this.maxInputImpulse));
             this.inputTimeHorz += delta_time;
         } else {
             this.inputTimeHorz -= delta_time * 4.0;
@@ -278,12 +278,14 @@ class Stage extends Phaser.Scene {
         // player input - shooting
         if(triggerKey.isDown) {
             if (current_time > this.playerActionCooldown + this.playerLastActionTime) {
-                this.spawnPlayerBullet(this.player.x, this.player.y, "player", current_time, {bulletSpeed: 10.0});
+                this.spawnPlayerBullet(this.player.x, this.player.y, "player", current_time, {bulletSpeed: 0.3});
                 this.playerLastActionTime = current_time;
             }
         }
 
         this.playerBulletMaxLife = 10000.0;
+
+
         this.playerBullets.getChildren().forEach(element => {
             if (element.active) {
                 let out_of_bounds = false;
@@ -298,10 +300,11 @@ class Stage extends Phaser.Scene {
                     if (lifespan > this.maxBulletLife) {
                         this.bullets.killAndHide(element);               
                     }
-                    let bulletDelta = bullet_behaviors[element._behavior](this, element, current_time);
+                    let bulletDelta = moveBullet(this, element, current_time);
                     element.x = bulletDelta[0];
                     element.y = bulletDelta[1];
                 }
+                element.launching = false; // skip collisions on the first frame because the offset isn't updated yet
             }
         });
 
