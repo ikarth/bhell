@@ -250,10 +250,16 @@ class Stage extends Phaser.Scene {
         let player_speed_input = 20.0;
         let precise_mode = false;
         this.player.body.setMaxSpeed(320);
+        // this.physics.world.timeScale = 1.0;
+        // this.tweens.timeScale = 1.0;
+        // this.time.timeScale = 1.0;
         if (preciseKey.isDown) {
             player_speed_input = 7.0;
             precise_mode = true;
             this.player.body.setMaxSpeed(240);
+            // this.physics.world.timeScale = 2.0;
+            // this.tweens.timeScale = 2.0;
+            // this.time.timeScale = 2.0;
         }
 
         if (cursors.left.isDown) {

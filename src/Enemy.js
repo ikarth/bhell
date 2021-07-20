@@ -9,7 +9,7 @@ const defaultEnemySettings = {
     bullets: {
         cooldown: 500.0, // time between bullet firings...
         onlySpawnOnScreen: true,
-        count: 2, // number to spawn at the same time (at regular angles)
+        count: undefined, // number to spawn at the same time (at regular angles)
         spawnAngle: 0,
         spawnRotationRate: 0.01, // 0.01 is reasonable
         speed: 0.089, // 0.01 is reasonable
@@ -51,7 +51,9 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.movementType = enemySettings.movement;
         this.speed = Phaser.Math.GetSpeed(enemySettings.speed * Phaser.Math.RND.pick([1.0, 1.0, 0.6]), 1);
 
-        enemySettings.bullets.count = Phaser.Math.RND.pick([1, 2, 3, 5, 6, 6, 2, 3, 2, 3, 2, 3, 3, 7]);
+        if(!enemySettings.bullets.count) {
+            enemySettings.bullets.count = Phaser.Math.RND.pick([1, 2, 3, 5, 6, 6, 2, 3, 2, 3, 2, 3, 3, 7]);
+        }
 
         // Normal movement - just go forward
         this.body.setVelocityY(enemySettings.speed);
