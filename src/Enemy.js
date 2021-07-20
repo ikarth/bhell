@@ -126,50 +126,8 @@ class Enemy extends Phaser.GameObjects.Sprite {
                 bulletSpin: bullet_properties.spinRate
             };
             this.scene.spawnNewBullet(new_bullet_settings);
-            // this.scene.spawnBullet(this.x, 
-            //             this.y, 
-            //             "outward-with-momentum", 
-            //             current_time, 
-            //             (i / bullet_properties.count), 
-            //             this.body.velocity.clone(), 
-            //             {
-            //                 bulletSpeed: bullet_properties.speed, 
-            //                 spinRate: bullet_properties.spinRate,
-            //                 spawnAngle: bullet_properties.spawnAngle,
-            //                 spawnAngleRotationRate: bullet_properties.spawnRotationRate
-            //             });
         }
         return bullet_properties.cooldown;
     }
 }
 
-        //this.enemies.incY(1);
-        // this.enemies.getChildren().forEach(element => {
-        //     if(element.active) {
-        //         if(element.y > game.config.height * 2) {
-        //            this.enemies.killAndHide(element);               
-        //         } else {
-        //             if (current_time > actionCooldownLimit + element.lastAction) {
-        //                 // Spawn One
-        //                 //this.spawnBullet(element.x, element.y, "spin-in-place", current_time, 0.0, element.body.velocity);
-        //                 // Spawn Many
-        //                 const spawn_count = element.bullets.spawnCount;
-        //                 for(const i of Array(spawn_count).keys()) {
-        //                     this.spawnBullet(element.x, 
-        //                                      element.y, 
-        //                                      "outward-with-momentum", 
-        //                                      current_time, 
-        //                                      (i / spawn_count), 
-        //                                      element.body.velocity.clone(), 
-        //                                      {
-        //                                         bulletSpeed: element.bullets.bulletSpeed, 
-        //                                         spinRate: 17000.0,
-        //                                         spawnAngle: element.bullets.angle,
-        //                                         spawnAngleRotationRate: element.bullets.spawnRotation
-        //                                     });
-        //                 }
-        //                 element.lastAction = current_time;
-        //             }
-        //         }
-        //     }
-        // });

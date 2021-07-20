@@ -254,43 +254,6 @@ class Stage extends Phaser.Scene {
         }
     }
 
-    // spawnBullet(x, y, pattern, current_time, spawn_offset, initial_velocity, settings={bulletSpeed: 0.01, spinRate: 15000.0, spawnAngleRotationRate: 0.0}) {
-    //     let bullet = this.bullets.get(x, y);
-    //     if(bullet) {
-    //         bullet.setActive(true);
-    //         bullet.setVisible(true);
-    //         bullet.body.immovable = true;
-    //         bullet.body.isCircle = true;
-    //         bullet.body.allowRotation = false;
-    //         bullet.body.moves = false;
-    //         bullet.body.onCollide = false;
-    //         bullet._behavior = pattern;
-    //         bullet.startTime = current_time;
-
-    //         bullet.spawnLocation = new Phaser.Math.Vector2(x,y);
-    //         bullet.spawnAngle = 180;
-    //         if (settings.spawnAngle) {
-    //             bullet.spawnAngle = settings.spawnAngle;
-    //         }
-    //         if (settings.spawnAngleRotationRate) {
-    //             if (Math.abs(settings.spawnAngleRotationRate) > 0.0001) {
-    //                 bullet.spawnAngle = settings.spawnAngle + (360.0 * (current_time % settings.spawnAngleRotationRate));
-    //             }                
-    //         }
-    //         bullet.spawnAngle %= 360.0;
-    //         bullet.spawnOffset = spawn_offset;
-    //         bullet.spawnImpetus = initial_velocity;
-            
-    //         //bullet.parent = parent;
-
-    //         bullet.bulletSpeed = settings.bulletSpeed; // per second
-    //         bullet.spinRate = settings.spinRate; // in revolutions per second
-
-    //         bullet.setDepth(10);
-    //         return bullet;
-    //     }
-    // }
-
     spawnPlayerBullet(x, y, pattern, current_time, settings={bulletSpeed: 1.01}) {
         let bullet = this.playerBullets.get(x,y);
         if(bullet) {
