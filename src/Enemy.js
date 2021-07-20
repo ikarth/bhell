@@ -46,6 +46,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.setScale(2);
         this.body.setSize(11,11);
         this.setTint(0xeedd22);
+        this.blendMode = Phaser.BlendModes.SCREEN;
         //this.body.setOffset(4,4);
         this.movementType = enemySettings.movement;
         this.speed = Phaser.Math.GetSpeed(enemySettings.speed * Phaser.Math.RND.pick([1.0, 1.0, 0.6]), 1);
