@@ -14,66 +14,6 @@ let moveBullet = (scene, bullet, current_time) => {
     return [new_position.x, new_position.y];
 };
 
-let bullet_behaviors = {
-    undefined: (scene, bullet) => {
-        return [bullet.x, bullet.y];
-    },
-    "player": (scene, bullet) => {
-        return [bullet.x, bullet.y - bullet.bulletSpeed];
-    },
-    "rain": (scene, bullet) => {
-        return [bullet.x, bullet.y + 2];
-    },
-    "outward": (scene, bullet, current_time) => {
-        const life_time = current_time - bullet.startTime;
-        const moveProgress = (life_time / 5000.0) % 1.0;
-        const currentAngle = bullet.spawnAngle + (360.0 * bullet.spawnOffset);
-        const currentDistance = 0.01 * life_time;
-        let bulletLoc = bullet.spawnLocation.clone().add(scene.physics.velocityFromAngle(currentAngle, currentDistance));
-        return [bulletLoc.x, bulletLoc.y];
-    },
-    "outward-with-momentum": (scene, bullet, current_time) => {
-        const life_time = current_time - bullet.startTime;
-        const moveProgress = (life_time / 5000.0) % 1.0;
-        const currentAngle = bullet.spawnAngle + (360.0 * bullet.spawnOffset);
-        const currentDistance = 0.01 * life_time;
-        let initial_travel = bullet.spawnImpetus.clone().scale(life_time / 1000.0); // impetus is distance vector per one second
-        let bulletLoc = bullet.spawnLocation.clone().add(initial_travel).add(scene.physics.velocityFromAngle(currentAngle, currentDistance));
-        return [bulletLoc.x, bulletLoc.y];
-    },
-    "spin-in-place": (scene, bullet, current_time) => {
-        const life_time = current_time - bullet.startTime;
-        const moveProgress = (life_time / 5000.0) % 1.0;
-        const currentAngle = bullet.spawnAngle + (360.0 * moveProgress) + (360.0 * bullet.spawnOffset);
-        let initial_travel = bullet.spawnImpetus.clone().scale(life_time / 1000.0); // impetus is distance vector per one second
-        const currentDistance = 0.01 * life_time;
-        let bulletLoc = bullet.spawnLocation.clone().add(initial_travel);
-        bulletLoc.add(scene.physics.velocityFromAngle(currentAngle, currentDistance));
-        return [bulletLoc.x, bulletLoc.y];
-    },
-    "spin-with-impetus": (scene, bullet, current_time) => {
-        const life_time = current_time - bullet.startTime;
-        const moveProgress = (life_time / bullet.spinRate) % 1.0;
-        const currentAngle = bullet.spawnAngle + (360.0 * moveProgress) + (360.0 * bullet.spawnOffset);
-        const currentDistance = bullet.bulletSpeed * life_time;
-        let initial_travel = bullet.spawnImpetus.clone().scale(life_time / 1000.0); // impetus is distance vector per one second
-        let bulletLoc = bullet.spawnLocation.clone().add(initial_travel);
-        bulletLoc.add(scene.physics.velocityFromAngle(currentAngle, currentDistance));
-        return [bulletLoc.x, bulletLoc.y];
-    }
-    // "spin-parent": (scene, bullet, current_time) => {
-    //     const life_time = current_time - bullet.startTime;
-    //     const moveProgress = (life_time / 2000.0) % 1.0;
-    //     const currentAngle = bullet.spawnAngle + (360.0 * moveProgress);
-    //     const currentDistance = 0.01 * life_time;
-    //     const parentLocation = new Phaser.Math.Vector2(bullet.parent.x, bullet.parent.y);
-    //     let bulletLoc = parentLocation.clone().add(scene.physics.velocityFromAngle(currentAngle, currentDistance));
-
-    //     return [bulletLoc.x, bulletLoc.y];
-    // }
-};
-
-
 let gameSettings = {
     enemyColor: 0xdddddd,
     enemyHitboxColor: 0xee3333
