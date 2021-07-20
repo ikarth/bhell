@@ -369,7 +369,7 @@ const config = {
         default: "arcade",
         arcade: {
             gravity: 0,
-            debug: true
+            debug: false
         }
     },
     scene: [Stage],
