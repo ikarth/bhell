@@ -1,5 +1,19 @@
 'use strict';
 
+let moveBullet = (scene, bullet, current_time) => {
+    const life_time = current_time - bullet.spawnTime;
+    const bullet_distance = (life_time * bullet.spawnSpeed);
+    let firing_angle = Phaser.Math.DegToRad(bullet.spawnAngle);
+    let spin_cycle = Phaser.Math.Angle.WrapDegrees(current_time * bullet.bulletSpin);
+    let amount_to_spin = Phaser.Math.DegToRad(spin_cycle);
+    let spin_angle = new Phaser.Math.Vector2(0.0, 1.0).rotate(amount_to_spin);
+    let firing_vector = spin_angle.rotate(firing_angle).scale(bullet_distance);
+    let inherited_velocity = bullet.spawnVelocity.clone().scale(life_time);
+    firing_vector.add(inherited_velocity);
+    let new_position = new Phaser.Math.Vector2(bullet.spawnX, bullet.spawnY).add(firing_vector);
+    return [new_position.x, new_position.y];
+};
+
 let bullet_behaviors = {
     undefined: (scene, bullet) => {
         return [bullet.x, bullet.y];
@@ -184,31 +198,8 @@ class Stage extends Phaser.Scene {
             console.log(enemy);
         }
 
-        // this.spawnEnemy = (x, y, settings = {bulletCount:6, bulletAngle:180, bulletAngleRotationRate: 10.0, bulletSpeed: 10.0, velocity: 40.0}) => {
-        //     if(undefined == x) {
-        //         x = Phaser.Math.Between(0, game.config.width);
-        //     }
-        //     if(undefined == y) {
-        //         y = Phaser.Math.Between(0, game.config.height);
-        //     }
-        //     console.log("Adding enemy", x, -y);
-        //     let enemy = this.enemies.get(x, y);
-        //     enemy.setActive(true);
-        //     enemy.setVisible(true);
-        //     enemy.lastAction = 0;
-        //     enemy.setVelocityY(settings.velocity);
-        //     enemy.bullets = {};
-        //     enemy.bullets.speed = settings.bulletSpeed;
-        //     enemy.bullets.spawnCount = settings.bulletCount;
-        //     enemy.bullets.angle = settings.bulletAngle;
-        //     enemy.bullets.spawnRotation = settings.bulletAngleRotationRate;
-        //     //let color = Phaser.Display.Color();
-        //     //enemy.setTint(color.random(50));
-        //     return enemy;
-        // };
-
         this.time.addEvent({
-            delay: 5000,
+            delay: 15000,
             loop: true,
             callback: this.spawnEnemy
         })
@@ -236,7 +227,69 @@ class Stage extends Phaser.Scene {
  
 
         this.spawnEnemy();
+
     }
+
+  
+
+    spawnNewBullet(settings) {
+        let bullet = this.bullets.get(settings.spawnX, settings.spawnY);
+        console.log(settings);
+        if(bullet) {
+            bullet.setActive(true);
+            bullet.setVisible(true);
+            bullet.body.immovable = true;
+            bullet.body.isCircle = true;
+            bullet.body.allowRotation = false;
+            bullet.body.moves = false;
+            bullet.body.onCollide = false;
+            bullet.spawnX = settings.spawnX;
+            bullet.spawnY = settings.spawnY;
+            bullet.spawnTime = settings.spawnTime;
+            bullet.bulletSpin = settings.bulletSpin;
+            bullet.spawnSpeed = settings.spawnSpeed;
+            bullet.spawnAngle = settings.spawnAngle;
+            bullet.spawnVelocity = settings.spawnVelocity;
+            bullet.setDepth(100);
+        }
+    }
+
+    // spawnBullet(x, y, pattern, current_time, spawn_offset, initial_velocity, settings={bulletSpeed: 0.01, spinRate: 15000.0, spawnAngleRotationRate: 0.0}) {
+    //     let bullet = this.bullets.get(x, y);
+    //     if(bullet) {
+    //         bullet.setActive(true);
+    //         bullet.setVisible(true);
+    //         bullet.body.immovable = true;
+    //         bullet.body.isCircle = true;
+    //         bullet.body.allowRotation = false;
+    //         bullet.body.moves = false;
+    //         bullet.body.onCollide = false;
+    //         bullet._behavior = pattern;
+    //         bullet.startTime = current_time;
+
+    //         bullet.spawnLocation = new Phaser.Math.Vector2(x,y);
+    //         bullet.spawnAngle = 180;
+    //         if (settings.spawnAngle) {
+    //             bullet.spawnAngle = settings.spawnAngle;
+    //         }
+    //         if (settings.spawnAngleRotationRate) {
+    //             if (Math.abs(settings.spawnAngleRotationRate) > 0.0001) {
+    //                 bullet.spawnAngle = settings.spawnAngle + (360.0 * (current_time % settings.spawnAngleRotationRate));
+    //             }                
+    //         }
+    //         bullet.spawnAngle %= 360.0;
+    //         bullet.spawnOffset = spawn_offset;
+    //         bullet.spawnImpetus = initial_velocity;
+            
+    //         //bullet.parent = parent;
+
+    //         bullet.bulletSpeed = settings.bulletSpeed; // per second
+    //         bullet.spinRate = settings.spinRate; // in revolutions per second
+
+    //         bullet.setDepth(10);
+    //         return bullet;
+    //     }
+    // }
 
     spawnPlayerBullet(x, y, pattern, current_time, settings={bulletSpeed: 1.01}) {
         let bullet = this.playerBullets.get(x,y);
@@ -252,44 +305,7 @@ class Stage extends Phaser.Scene {
             bullet.startTime = current_time;
             bullet.spawnLocation = new Phaser.Math.Vector2(x,y);
             bullet.bulletSpeed = settings.bulletSpeed; // per second
-            bullet.setDepth(20);
-            return bullet;
-        }
-    }
-
-    spawnBullet(x, y, pattern, current_time, spawn_offset, initial_velocity, settings={bulletSpeed: 0.01, spinRate: 15000.0, spawnAngleRotationRate: 0.0}) {
-        let bullet = this.bullets.get(x, y);
-        if(bullet) {
-            bullet.setActive(true);
-            bullet.setVisible(true);
-            bullet.body.immovable = true;
-            bullet.body.isCircle = true;
-            bullet.body.allowRotation = false;
-            bullet.body.moves = false;
-            bullet.body.onCollide = false;
-            bullet._behavior = pattern;
-            bullet.startTime = current_time;
-
-            bullet.spawnLocation = new Phaser.Math.Vector2(x,y);
-            bullet.spawnAngle = 180;
-            if (settings.spawnAngle) {
-                bullet.spawnAngle = settings.spawnAngle;
-            }
-            if (settings.spawnAngleRotationRate) {
-                if (Math.abs(settings.spawnAngleRotationRate) > 0.0001) {
-                    bullet.spawnAngle = settings.spawnAngle + (360.0 * (current_time % settings.spawnAngleRotationRate));
-                }                
-            }
-            bullet.spawnAngle %= 360.0;
-            bullet.spawnOffset = spawn_offset;
-            bullet.spawnImpetus = initial_velocity;
-            
-            //bullet.parent = parent;
-
-            bullet.bulletSpeed = settings.bulletSpeed; // per second
-            bullet.spinRate = settings.spinRate; // in revolutions per second
-
-            bullet.setDepth(10);
+            bullet.setDepth(200);
             return bullet;
         }
     }
@@ -395,11 +411,14 @@ class Stage extends Phaser.Scene {
                 if(element.active && out_of_bounds) {
                     this.bullets.killAndHide(element);               
                 } else {
-                    let lifespan = current_time - element.startTime;
-                    let bulletDelta = bullet_behaviors[element._behavior](this, element, current_time);
+                    //console.log(element);
+                    let lifespan = current_time - element.spawnTime;
+                    //let bulletDelta = bullet_behaviors[element._behavior](this, element, current_time);
+                    let bulletDelta = moveBullet(this, element, current_time);
                     element.x = bulletDelta[0];
                     element.y = bulletDelta[1];
                     if (lifespan > maxBulletLife) {
+                        console.log(bullet);
                         this.bullets.killAndHide(element);               
                     }
                 }                

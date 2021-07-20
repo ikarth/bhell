@@ -3,13 +3,17 @@
 const defaultEnemySettings = {
     texture: 'enemy', 
     movement: 'normal', 
-    speed: 200.0, 
+    speed: 50.0, 
     lifespan: null,
     bullets: {
-        count: 6,
-        spawnAngle: 180,
-        spawnRotationRate: 10.0,
-        speed: 10.0
+        cooldown: 500.0, // time between bullet firings...
+        onlySpawnOnScreen: true,
+        count: 2, // number to spawn at the same time (at regular angles)
+        spawnAngle: 0,
+        spawnRotationRate: 0.01, // 0.01 is reasonable
+        speed: 0.048, // 0.01 is reasonable
+        spinRate: 0.0,
+        inheritParentVelocity: 1.0 // mostly keep this between 0.0 and 1.0
     }
 };
 
@@ -41,33 +45,40 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.enemySpeed = enemySettings.speed;
 
         this.lastAction = 0;
+        this.nextAction = 0;
         this.cooldown = 1000.0
         this.BulletProperties = [];
         let bp = {};
         console.log(enemySettings);
         bp.speed = enemySettings.bullets.speed;
         bp.count = enemySettings.bullets.count;
+        bp.spinRate = enemySettings.bullets.spinRate;
         bp.spawnRotationRate = enemySettings.bullets.spawnRotationRate;
         bp.spawnAngle = enemySettings.bullets.spawnAngle;
+        bp.inheritParentVelocity = enemySettings.bullets.inheritParentVelocity;
+        bp.cooldown = enemySettings.bullets.cooldown;
         this.BulletProperties.push(bp);
     }
     init() {
-
+        
     }
     spawn(x=undefined, y=undefined, enemySettings = defaultEnemySettings) {
         // Spawn
         if(undefined == x) { x = Phaser.Math.Between(0, game.config.width); }
         if(undefined == y) { y = Phaser.Math.Between(0, game.config.height); }
+        //y=0; // Temporary hack to place at top of screen - replace with real pattern spawning later
         this.setPosition(x,y);
         this.setActive(true);
         this.setVisible(true);
         this.beginTime = null;
         this.lastAction = 0;
+        this.nextAction = 0;
 
         this.configure(enemySettings);
         
         this.body.setVelocityY(this.enemySpeed);
         console.log("Spawned Enemy");
+        console.log(this);
     }
     despawn() {
         this.setActive(false);
@@ -87,11 +98,48 @@ class Enemy extends Phaser.GameObjects.Sprite {
             }
         }
         if (this.active) {
-            if(this.lastAction + this.cooldown < current_time) {
+            if(this.nextAction < current_time) {
                 // Take next action
+                let cooldown = this.actionSpawnBullets(current_time);
                 this.lastAction = current_time;
+                this.nextAction = current_time + cooldown;
             }
         }
+    }
+
+    actionSpawnBullets(current_time) {
+        let bullet_properties = this.BulletProperties[0];
+        for(const i of Array(bullet_properties.count).keys()) {
+            let firing_angle = bullet_properties.spawnAngle;
+            firing_angle += (current_time * bullet_properties.spawnRotationRate);
+            firing_angle += (i / bullet_properties.count) * 360.0;
+            firing_angle = Phaser.Math.Angle.WrapDegrees(firing_angle)
+            const inherit_factor = 0.001;
+            let parent_velocity = this.body.velocity.clone().scale(bullet_properties.inheritParentVelocity * inherit_factor);
+            const new_bullet_settings = {
+                spawnX: this.x,
+                spawnY: this.y,
+                spawnTime: current_time,
+                spawnVelocity: parent_velocity,
+                spawnAngle: firing_angle,
+                spawnSpeed: bullet_properties.speed,
+                bulletSpin: bullet_properties.spinRate
+            };
+            this.scene.spawnNewBullet(new_bullet_settings);
+            // this.scene.spawnBullet(this.x, 
+            //             this.y, 
+            //             "outward-with-momentum", 
+            //             current_time, 
+            //             (i / bullet_properties.count), 
+            //             this.body.velocity.clone(), 
+            //             {
+            //                 bulletSpeed: bullet_properties.speed, 
+            //                 spinRate: bullet_properties.spinRate,
+            //                 spawnAngle: bullet_properties.spawnAngle,
+            //                 spawnAngleRotationRate: bullet_properties.spawnRotationRate
+            //             });
+        }
+        return bullet_properties.cooldown;
     }
 }
 
@@ -125,59 +173,3 @@ class Enemy extends Phaser.GameObjects.Sprite {
         //         }
         //     }
         // });
-
-// this.spawnEnemy = (x, y, settings = {bulletCount:6, bulletAngle:180, bulletAngleRotationRate: 10.0, bulletSpeed: 10.0, velocity: 40.0}) => {
-//     if(undefined == x) {
-//         x = Phaser.Math.Between(0, game.config.width);
-//     }
-//     if(undefined == y) {
-//         y = Phaser.Math.Between(0, game.config.height);
-//     }
-//     console.log("Adding enemy", x, -y);
-//     let enemy = this.enemies.get(x, y);
-//     enemy.setActive(true);
-//     enemy.setVisible(true);
-//     enemy.lastAction = 0;
-//     enemy.setVelocityY(settings.velocity);
-//     enemy.bullets = {};
-//     enemy.bullets.speed = settings.bulletSpeed;
-//     enemy.bullets.spawnCount = settings.bulletCount;
-//     enemy.bullets.angle = settings.bulletAngle;
-//     enemy.bullets.spawnRotation = settings.bulletAngleRotationRate;
-//     //let color = Phaser.Display.Color();
-//     //enemy.setTint(color.random(50));
-//     return enemy;
-// };
-
-// class Enemy extends Phaser.GameObjects.Sprite {
-//     constructor(scene, x=100, y=100) {
-//         super(scene, x, y);
-//         this.setTexture('enemy');
-//         this.speed = Phaser.Math.GetSpeed(400, 1);
-//         console.log("Enemy constructor");
-//     }
-//     init() {
-//         console.log("Enemy");
-//     }
-//     begin(x, y) {
-//         this.setPosition(x, y);
-//         this.setActive(true);
-//         this.setVisible(true);
-//         let color = Phaser.Display.Color();
-//         this.setTint(color.random(50));
-//     }
-//     end() {
-//         console.log("end");
-//         this.setActive(false);
-//         this.setVisible(false)
-//     }
-//     update(time, delta) {
-//         this.y -= this.speed * delta;
-//         if (this.y < 200) {
-//             this.end()
-//         }
-//     }
-//     init() {
-        
-//     }
-// }
