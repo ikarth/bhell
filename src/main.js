@@ -23,6 +23,8 @@ let gameSettings = {
 let cursors;
 let triggerKey;
 let preciseKey;
+let debugKeyLeft;
+let debugKeyRight;
 
 class Stage extends Phaser.Scene {
     constructor() {
@@ -40,7 +42,8 @@ class Stage extends Phaser.Scene {
         this.load.image('map_tileset', 'assets/colored_packed.png');
         this.load.tilemapTiledJSON('bhell_map', 'assets/bhell_backgrounds.json');
 
-        this.load.spritesheet('player_character', 'assets/playercharacteranimated.png', {frameWidth: 16, frameHeight: 16})
+        this.load.spritesheet('player_character', 'assets/playercharacteranimated.png', {frameWidth: 16, frameHeight: 16});
+        this.load.spritesheet('environment', 'assets/tileset_legacy.png', {frameWidth: 16, frameHeight: 16, spacing: 1});
     }
 
     redraw() {
@@ -71,6 +74,8 @@ class Stage extends Phaser.Scene {
         cursors = this.input.keyboard.createCursorKeys();
         triggerKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         preciseKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+        debugKeyLeft = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+        debugKeyRight = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
 
         let playerX = game.config.width/2;
         let playerY = game.config.height - 32;
@@ -149,9 +154,7 @@ class Stage extends Phaser.Scene {
         // populate player bullet pool
         this.playerBullets.createMultiple({quantity: config.gameplay.playerBulletPoolSize, active: false});
  
-
         this.spawnEnemy();
-
     }
 
   
@@ -366,7 +369,7 @@ const config = {
         default: "arcade",
         arcade: {
             gravity: 0,
-            debug: false
+            debug: true
         }
     },
     scene: [Stage],

@@ -1,7 +1,8 @@
 'use strict';
 
 const defaultEnemySettings = {
-    texture: 'enemy', 
+    texture: 'environment', 
+    frame: 100,
     movement: 'normal', 
     speed: 50.0, 
     lifespan: null,
@@ -37,8 +38,19 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.lifespan = enemySettings.lifespan;
 
         this.setTexture(enemySettings.texture);
+        this.enemyFrame = enemySettings.frame;
+        const possible_enemies = [122, 123, 124, 125, 126, 152, 153, 154, 155, 185, 186, 187, 188, 189, 190, 191, 227, 228, 229];
+        let this_enemy = Phaser.Math.RND.pick(possible_enemies);
+        this.enemyFrame = this_enemy;
+        this.setFrame(this.enemyFrame);
+        this.setScale(2);
+        this.body.setSize(11,11);
+        this.setTint(0xeedd22);
+        //this.body.setOffset(4,4);
         this.movementType = enemySettings.movement;
-        this.speed = Phaser.Math.GetSpeed(enemySettings.speed, 1);
+        this.speed = Phaser.Math.GetSpeed(enemySettings.speed * Phaser.Math.RND.pick([1.0, 1.0, 0.6]), 1);
+
+        enemySettings.bullets.count = Phaser.Math.RND.pick([1, 2, 3, 5, 6, 6, 2, 3, 2, 3, 2, 3, 3, 7]);
 
         // Normal movement - just go forward
         this.body.setVelocityY(enemySettings.speed);
@@ -67,7 +79,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         // Spawn
         if(undefined == x) { x = Phaser.Math.Between(0, game.config.width); }
         if(undefined == y) { y = Phaser.Math.Between(0, game.config.height); }
-        y=-256; // Temporary hack to place at top of screen - replace with real pattern spawning later
+        y=-64; // Temporary hack to place at top of screen - replace with real pattern spawning later
         this.setPosition(x,y);
         this.setActive(true);
         this.setVisible(true);
@@ -87,6 +99,17 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.beginTime = null;
     }
     update(current_time, delta_time) {
+        // if(this.scene.input.keyboard.checkDown(debugKeyLeft, 1.1)) {
+        //     this.enemyFrame -= 1;
+        //     console.log(this.enemyFrame);
+        //     this.setFrame(this.enemyFrame);
+        // }
+        // if(this.scene.input.keyboard.checkDown(debugKeyRight, 1.1)) {
+        //     this.enemyFrame += 1;
+        //     console.log(this.enemyFrame);
+        //     this.setFrame(this.enemyFrame);
+        // }
+
         if(!this.beginTime) {
             this.beginTime = current_time;
         }
