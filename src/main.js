@@ -174,7 +174,6 @@ class Stage extends Phaser.Scene {
 
     spawnNewBullet(settings) {
         let bullet = this.bullets.get(settings.spawnX, settings.spawnY);
-        console.log(settings);
         if(bullet) {
             bullet.setActive(true);
             bullet.setVisible(true);

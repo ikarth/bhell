@@ -11,7 +11,7 @@ const defaultEnemySettings = {
         count: 2, // number to spawn at the same time (at regular angles)
         spawnAngle: 0,
         spawnRotationRate: 0.01, // 0.01 is reasonable
-        speed: 0.048, // 0.01 is reasonable
+        speed: 0.089, // 0.01 is reasonable
         spinRate: 0.0,
         inheritParentVelocity: 1.0 // mostly keep this between 0.0 and 1.0
     }
@@ -57,6 +57,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         bp.spawnAngle = enemySettings.bullets.spawnAngle;
         bp.inheritParentVelocity = enemySettings.bullets.inheritParentVelocity;
         bp.cooldown = enemySettings.bullets.cooldown;
+        bp.onlySpawnOnScreen = enemySettings.bullets.onlySpawnOnScreen;
         this.BulletProperties.push(bp);
     }
     init() {
@@ -66,7 +67,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         // Spawn
         if(undefined == x) { x = Phaser.Math.Between(0, game.config.width); }
         if(undefined == y) { y = Phaser.Math.Between(0, game.config.height); }
-        //y=0; // Temporary hack to place at top of screen - replace with real pattern spawning later
+        y=-256; // Temporary hack to place at top of screen - replace with real pattern spawning later
         this.setPosition(x,y);
         this.setActive(true);
         this.setVisible(true);
@@ -107,8 +108,17 @@ class Enemy extends Phaser.GameObjects.Sprite {
         }
     }
 
+    isOnScreen() {
+        return Phaser.Geom.Rectangle.Contains(this.scene.cameras.main.worldView, this.x, this.y)
+    }
+
     actionSpawnBullets(current_time) {
         let bullet_properties = this.BulletProperties[0];
+        if (bullet_properties.onlySpawnOnScreen) {
+            if(!this.isOnScreen()) {
+                return 0;
+            }            
+        }
         for(const i of Array(bullet_properties.count).keys()) {
             let firing_angle = bullet_properties.spawnAngle;
             firing_angle += (current_time * bullet_properties.spawnRotationRate);
