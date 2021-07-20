@@ -363,6 +363,7 @@ class Stage extends Phaser.Scene {
 
 const config = {
     type: Phaser.AUTO,
+    parent: "game",
     width: 600,
     height: 800,
     pixelArt: true,
