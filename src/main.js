@@ -53,6 +53,22 @@ class Stage extends Phaser.Scene {
     }
 
     create() {
+        this.score = 0;
+        this.scoreText = this.add.text(
+            8,
+            8,
+            this.score,
+            { 
+                fontFamily: "Papyrus, Comic Sans, serif",
+                textAlign: 'center',
+                fontSize: "16px"              
+            }
+            
+        )
+        this.scoreText.setOrigin(0);
+        this.scoreText.setDepth(1000);
+
+        this.isGameOver = false;
         this.mapX = 0;
         this.mapY = 0;
         this.mapOffset = 16 * 32 * 2; // tile size * map chunk height * scaling
@@ -230,6 +246,13 @@ class Stage extends Phaser.Scene {
     }
 
     update(current_time, delta_time) {
+        
+        if (this.isGameOver) {
+            return;
+        }
+        this.score += 1;
+        this.scoreText.text = this.score;
+
         const that = this;
         let mapScrollSpeed = 0.1;
         this.landscapeLayers.forEach((layer) => {
@@ -357,6 +380,12 @@ class Stage extends Phaser.Scene {
         //this.playerHitIndicator.x = this.player.x + this.player.body.velocity.x;
         //this.playerHitIndicator.y = this.player.y + this.player.body.velocity.y;
         //this.redraw();
+
+        if(this.player.y < 400) {
+            this.cameras.main.fadeOut(4000, 0x47, 0x2d, 0x3c);
+            this.scene.transition({target: 'gameOverStage', duration: 5000, allowInput: false, data: {score: this.score}});
+            this.isGameOver = true;
+        }
     }
 }
 
@@ -379,7 +408,7 @@ const config = {
             debug: false
         }
     },
-    scene: [Stage],
+    scene: [Stage, GameOver],
     gameplay: { // Phaser ignores this, but we can use it directly
         bulletPoolSize: 20000,
         playerBulletPoolSize: 200
