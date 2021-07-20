@@ -35,7 +35,7 @@ class Stage extends Phaser.Scene {
     preload() {
         this.load.image('enemy', 'assets/box.png');
         this.load.image('player', 'assets/player.png');
-        this.load.image('bullet', 'assets/bullet.png');
+        this.load.image('bullet', 'assets/star_08.png');
         this.load.image('playerBullet', 'assets/star_02.png');
         this.load.image('map_tileset', 'assets/colored_packed.png');
         this.load.tilemapTiledJSON('bhell_map', 'assets/bhell_backgrounds.json');
@@ -162,6 +162,7 @@ class Stage extends Phaser.Scene {
             bullet.setActive(true);
             bullet.setVisible(true);
             bullet.body.immovable = true;
+            bullet.body.setSize(8);
             bullet.body.isCircle = true;
             bullet.body.allowRotation = false;
             bullet.body.moves = false;
@@ -173,6 +174,8 @@ class Stage extends Phaser.Scene {
             bullet.spawnSpeed = settings.spawnSpeed;
             bullet.spawnAngle = settings.spawnAngle;
             bullet.spawnVelocity = settings.spawnVelocity;
+            bullet.blendMode = Phaser.BlendModes.ADD;
+            bullet.setTintFill(0xff9999, 0xff9999, 0xffff44, 0xffff44);
             bullet.setDepth(100);
         }
     }
@@ -245,9 +248,9 @@ class Stage extends Phaser.Scene {
         let precise_mode = false;
         this.player.body.setMaxSpeed(320);
         if (preciseKey.isDown) {
-            player_speed_input = 1.0;
+            player_speed_input = 7.0;
             precise_mode = true;
-            this.player.body.setMaxSpeed(180);
+            this.player.body.setMaxSpeed(240);
         }
 
         if (cursors.left.isDown) {
@@ -363,7 +366,7 @@ const config = {
         default: "arcade",
         arcade: {
             gravity: 0,
-            debug: true
+            debug: false
         }
     },
     scene: [Stage],
